@@ -17,3 +17,10 @@ The following subprojects/components are included. Some of them are not fully im
 * [Abstract-Machine](https://github.com/NJU-ProjectN/abstract-machine)
 * [Nanos-lite](https://github.com/NJU-ProjectN/nanos-lite)
 * [Navy-apps](https://github.com/NJU-ProjectN/navy-apps)
+
+# 新环境下配置命令
+1. 安装相关依赖
+bash install.sh
+2. 在.bashrc里设置环境参数
+bash set_env.sh
+source ~/.bashrc
