@@ -24,6 +24,13 @@ const char *regs[] = {
 };
 
 void isa_reg_display() {
+  #define FMT_REG_DISPLAY MUXDEF(CONFIG_ISA64, "0x%-21" PRIx64, "0x%-13" PRIx32)
+  printf("isa_reg_display\n");
+  size_t reg_len = MUXDEF(CONFIG_RVE, 16, 32);
+  for(size_t i = 0; i < reg_len; i++){
+    // printf("%-15s0x%-13x\n", reg_name(i), gpr(i));
+    printf("%-15s" FMT_REG_DISPLAY "\n", reg_name(i), gpr(i));
+  }
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {

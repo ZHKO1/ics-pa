@@ -19,6 +19,8 @@
 #include <readline/history.h>
 #include "sdb.h"
 
+#include <memory/paddr.h>
+
 static int is_batch_mode = false;
 
 void init_regex();
@@ -47,6 +49,53 @@ static int cmd_c(char *args) {
   return 0;
 }
 
+static int cmd_si(char *args) {
+  uint64_t n = 1;
+  if (args)
+  {
+    int match = sscanf(args, "%ld", &n);
+    if(!match){
+      printf("Unknown args '%s'.Usage: si [N]\n", args);
+      return 0;
+    }
+  }
+  cpu_exec(n);
+  return 0;
+}
+
+static int cmd_info(char *args) {
+  char usage_msg[] = "Usage: info SUBCMD(such as 'info r' or 'info w')";
+  char info_args[10] = "";
+  if (!args) {
+    printf("%s\n", usage_msg);
+    return 0;
+  }
+  sscanf(args, "%s", info_args);
+  if (strcmp(info_args, "r") == 0) {
+    isa_reg_display();
+  }else if(strcmp(info_args, "w") == 0){
+  }else{
+    printf("Unknown args '%s'.%s\n", args, usage_msg);
+  }
+  return 0;
+}
+
+static int cmd_x(char *args) {
+  char usage_msg[] = "Usage: x N EXPR(such as 'x 10 $esp')";
+  int n = 0;
+  paddr_t addr = 0;
+  if (!args) {
+    printf("%s\n", usage_msg);
+    return 0;
+  }
+  int match = sscanf(args, "%d %" MUXDEF(CONFIG_ISA64, PRIx64, PRIx32), &n, &addr);
+  if(match != 2){
+    printf("Unknown args '%s'.%s\n", args, usage_msg);
+    return 0;
+  }
+  printf_memory_by_paddr_len(addr, n);
+  return 0;
+}
 
 static int cmd_q(char *args) {
   nemu_state.state = NEMU_QUIT;
@@ -62,6 +111,9 @@ static struct {
 } cmd_table [] = {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
+  { "si", "Step one instruction exactly", cmd_si },
+  { "info", "Generic command for showing things about the program being debugged", cmd_info },
+  { "x", "Examine memory", cmd_x },
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */

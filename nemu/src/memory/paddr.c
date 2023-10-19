@@ -62,3 +62,20 @@ void paddr_write(paddr_t addr, int len, word_t data) {
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   out_of_bound(addr);
 }
+
+void printf_memory_by_paddr_len(paddr_t addr, int len) {
+  paddr_t columns = 8;
+  paddr_t cur_addr = addr;
+  paddr_t n = len;
+  while ( cur_addr < addr + n ) {
+    paddr_t i = (cur_addr - addr) % columns;
+    if(i == 0){
+        printf(FMT_WORD ": ", cur_addr);
+    }
+    printf( "0x%02x  ", paddr_read(cur_addr, 1));
+    if(i == 7 || (cur_addr == addr + n - 1)){
+        printf("\n");
+    }
+    cur_addr++;
+  }
+}
