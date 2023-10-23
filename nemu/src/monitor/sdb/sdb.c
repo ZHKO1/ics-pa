@@ -25,6 +25,7 @@ static int is_batch_mode = false;
 
 void init_regex();
 void init_wp_pool();
+word_t expr(char *e, bool *success);
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -97,6 +98,21 @@ static int cmd_x(char *args) {
   return 0;
 }
 
+static int cmd_p(char *args) {
+  char usage_msg[] = "Usage: p EXPR(such as 'p $eax + 1')";
+  if (!args) {
+    printf("%s\n", usage_msg);
+    return 0;
+  }
+  // printf("%s\n", args);
+  bool success = 1;
+  uint32_t result = expr(args, &success);
+  if(success){
+    printf("%d\n", result);
+  }
+  return 0;
+}
+
 static int cmd_q(char *args) {
   nemu_state.state = NEMU_QUIT;
   return -1;
@@ -114,6 +130,7 @@ static struct {
   { "si", "Step one instruction exactly", cmd_si },
   { "info", "Generic command for showing things about the program being debugged", cmd_info },
   { "x", "Examine memory", cmd_x },
+  { "p", "Print value of expression EXP.", cmd_p },
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */

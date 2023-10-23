@@ -14,6 +14,10 @@
 ***************************************************************************************/
 
 #include <common.h>
+// #define TEST_GENEXPR 1
+#ifdef TEST_GENEXPR
+#include "monitor/sdb/sdb.h"
+#endif
 
 void init_monitor(int, char *[]);
 void am_init_monitor();
@@ -26,6 +30,12 @@ int main(int argc, char *argv[]) {
   am_init_monitor();
 #else
   init_monitor(argc, argv);
+#endif
+
+#ifdef TEST_GENEXPR
+  /* 配合tools/gen-expr/测试 */
+  check_expr();
+  return 0;
 #endif
 
   /* Start engine. */
