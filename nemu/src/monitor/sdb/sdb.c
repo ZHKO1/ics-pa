@@ -105,10 +105,10 @@ static int cmd_p(char *args) {
     return 0;
   }
   // printf("%s\n", args);
-  bool success = 1;
+  bool success = true;
   uint32_t result = expr(args, &success);
   if(success){
-    printf("%d\n", result);
+    printf("%d (0x%x)\n", result, result);
   }
   return 0;
 }

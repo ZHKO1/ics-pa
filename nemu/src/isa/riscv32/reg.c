@@ -34,5 +34,17 @@ void isa_reg_display() {
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
+  size_t reg_len = MUXDEF(CONFIG_RVE, 16, 32);
+  for(size_t i = 0; i < reg_len; i++){
+    const char *name = reg_name(i);
+    if(!strcmp(s + 1, "pc")){
+      return cpu.pc;      
+    }
+    if(!strcmp(s + 1, "0") || !strcmp(s + 1, name)){
+      return gpr(i);      
+    }
+  }
+  *success = false;
+  printf("Can't find reg(%s)\n", s);
   return 0;
 }

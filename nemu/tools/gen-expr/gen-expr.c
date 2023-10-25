@@ -65,25 +65,32 @@ static void gen(char c){
 }
 
 static void gen_rand_op(){
-  char c = '+';
-  switch (choose(4)) {
+  switch (choose(7)) {
     case 0:
-      c = '+';
+      UPDATE_BUF("%c", "%c", '+');
       break;
     case 1:
-      c = '-';
+      UPDATE_BUF("%c", "%c", '-');
       break;
     case 2:
-      c = '*';
+      UPDATE_BUF("%c", "%c",  '*');
       break;
     case 3:
-      c = '/';
+      UPDATE_BUF("%c", "%c", '/');
+      break;
+    case 4:
+      UPDATE_BUF("%s", "%s", "==");
+      break;
+    case 5:
+      UPDATE_BUF("%s", "%s", "!=");
+      break;
+    case 6:
+      UPDATE_BUF("%s", "%s", "&&");
       break;
     default:
       assert(0);
       break;
   }
-  UPDATE_BUF("%c", "%c", c);
 }
 
 
@@ -91,10 +98,11 @@ static void gen_rand_expr() {
   if(buf_index >= MAXLEN){
     return;
   }
-  switch (choose(4)) {
+  switch (choose(5)) {
     case 0: gen(' ');gen_rand_expr();break;
     case 1: gen_num(); break;
     case 2: gen('('); gen_rand_expr(); gen(')'); break;
+    case 3: gen('-');gen_rand_expr();break;
     default: gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
   }
 }
