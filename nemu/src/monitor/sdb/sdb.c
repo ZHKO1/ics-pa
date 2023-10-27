@@ -25,6 +25,10 @@ static int is_batch_mode = false;
 
 void init_regex();
 void init_wp_pool();
+bool new_wp(char *expression);
+void free_wp(int no);
+void printf_wps();
+
 word_t expr(char *e, bool *success);
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
@@ -75,6 +79,7 @@ static int cmd_info(char *args) {
   if (strcmp(info_args, "r") == 0) {
     isa_reg_display();
   }else if(strcmp(info_args, "w") == 0){
+    printf_wps();
   }else{
     printf("Unknown args '%s'.%s\n", args, usage_msg);
   }
@@ -113,6 +118,34 @@ static int cmd_p(char *args) {
   return 0;
 }
 
+static int cmd_w(char *args) {
+  IFNDEF(CONFIG_WATCHPOINT, printf("Please enable watchpoint in menuconfig\n");return 0);
+  char usage_msg[] = "Usage: w EXPR(such as 'w *0x2000')";
+  if (!args) {
+    printf("%s\n", usage_msg);
+    return 0;
+  }
+  new_wp(args);
+  return 0;
+}
+
+static int cmd_d(char *args) {
+  char usage_msg[] = "Usage: d [N](such as 'd 2')";
+  if (args)
+  {
+    int wp_index = 0;
+    int match = sscanf(args, "%d", &wp_index);
+    if(!match){
+      printf("Unknown args '%s'.%s\n", args, usage_msg);
+      return 0;
+    }
+    free_wp(wp_index);
+  } else {
+    init_wp_pool();
+  }
+  return 0;
+}
+
 static int cmd_q(char *args) {
   nemu_state.state = NEMU_QUIT;
   return -1;
@@ -130,7 +163,9 @@ static struct {
   { "si", "Step one instruction exactly", cmd_si },
   { "info", "Generic command for showing things about the program being debugged", cmd_info },
   { "x", "Examine memory", cmd_x },
-  { "p", "Print value of expression EXP.", cmd_p },
+  { "p", "Print value of expression EXP", cmd_p },
+  { "w", "Set a watchpoint for EXPRESSION", cmd_w },
+  { "d", "Delete all or some breakpoints", cmd_d },
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */

@@ -32,12 +32,15 @@ static bool g_print_step = false;
 
 void device_update();
 
+bool check_wps();
+
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+  IFDEF(CONFIG_WATCHPOINT, if(check_wps() && (nemu_state.state == NEMU_RUNNING)){ nemu_state.state = NEMU_STOP; });
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {

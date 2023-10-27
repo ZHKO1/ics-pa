@@ -122,6 +122,27 @@ config CC_ASAN
   depends on MODE_SYSTEM
   bool "Enable address sanitizer"
   default n
+
+config CC_KASAN
+  depends on MODE_SYSTEM
+  bool "Enable kernel-address sanitizer"
+  default n
+
+config CC_PCAN
+  depends on MODE_SYSTEM
+  bool "Enable pointer-compare sanitizer"
+  default n
+
+config CC_PSAN
+  depends on MODE_SYSTEM
+  bool "Enable pointer-subtract sanitizer"
+  default n
+
+config CC_LEAKAN
+  depends on MODE_SYSTEM
+  bool "Enable leak sanitizer"
+  default n
+
 endmenu
 
 menu "Testing and Debugging"
@@ -191,6 +212,11 @@ config DIFFTEST_REF_NAME
   default "kvm" if DIFFTEST_REF_KVM
   default "spike" if DIFFTEST_REF_SPIKE
   default "none"
+
+config WATCHPOINT
+  bool "Enable watchpoint"
+  default y
+
 endmenu
 
 if MODE_SYSTEM
