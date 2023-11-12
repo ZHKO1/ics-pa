@@ -217,6 +217,21 @@ config WATCHPOINT
   bool "Enable watchpoint"
   default y
 
+config MTRACE
+  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  bool "Enable memory tracer"
+  default n
+
+config MTRACE_START_ADDRESS
+  depends on MTRACE
+  hex "Memory tracking Start address"
+  default MBASE
+
+config MTRACE_RANGE
+  depends on MTRACE
+  hex "Memory tracking Range"
+  default MSIZE
+
 endmenu
 
 if MODE_SYSTEM

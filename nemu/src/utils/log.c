@@ -17,6 +17,8 @@
 
 extern uint64_t g_nr_guest_inst;
 
+static struct IringBufs iringbufs = {.start = 0, .end = 0, .str = {}};
+
 #ifndef CONFIG_TARGET_AM
 FILE *log_fp = NULL;
 
@@ -35,3 +37,24 @@ bool log_enable() {
          (g_nr_guest_inst <= CONFIG_TRACE_END), false);
 }
 #endif
+
+void update_iringbufs(char *str) {
+  iringbufs.end = (iringbufs.end + 1) % IringBufNum;
+  char *buf = iringbufs.str[iringbufs.end];
+  memset(buf, 0, IringBufLen);
+  strncpy(buf, str, IringBufLen);
+  buf[IringBufLen - 1] = '\0';
+  if (iringbufs.end == iringbufs.start) {
+    iringbufs.start = (iringbufs.start + 1) % IringBufNum;
+  }
+}
+
+void printf_iringbufs() {
+  printf("last %d instructions:\n", IringBufNum);
+  size_t i = iringbufs.start;
+  while (i != iringbufs.end) {
+    printf("     %s\n", iringbufs.str[i]);
+    i = (i + 1) % IringBufNum;
+  }
+  printf("---> %s\n", iringbufs.str[i]);
+}

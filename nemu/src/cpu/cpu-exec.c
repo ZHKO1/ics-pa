@@ -71,6 +71,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
 #else
   p[0] = '\0'; // the upstream llvm does not support loongarch32r
 #endif
+  update_iringbufs(s->logbuf);
 #endif
 }
 
@@ -96,6 +97,9 @@ static void statistic() {
 
 void assert_fail_msg() {
   isa_reg_display();
+#ifdef CONFIG_ITRACE
+  printf_iringbufs();
+#endif
   statistic();
 }
 
