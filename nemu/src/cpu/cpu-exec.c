@@ -34,6 +34,11 @@ void device_update();
 
 bool check_wps();
 
+void update_iringbufs(char *str);
+void printf_iringbufs();
+
+void printf_ftrace(Decode *s);
+
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
@@ -41,6 +46,8 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
   IFDEF(CONFIG_WATCHPOINT, if(check_wps() && (nemu_state.state == NEMU_RUNNING)){ nemu_state.state = NEMU_STOP; });
+
+  IFDEF(CONFIG_FTRACE, printf_ftrace(_this));
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {

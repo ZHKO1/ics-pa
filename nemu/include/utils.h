@@ -73,16 +73,8 @@ uint64_t get_time();
     log_write(__VA_ARGS__); \
   } while (0)
 
-#define IringBufNum 10
-#define IringBufLen 128
 
-struct IringBufs {
-  size_t start;
-  size_t end;
-  char str[IringBufNum][IringBufLen];
-};
-
-void update_iringbufs(char *str);
-void printf_iringbufs();
+// ----------- elf -----------
+char *load_func_from_elf(paddr_t address, bool is_exact);
 
 #endif

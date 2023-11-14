@@ -14,10 +14,9 @@
 ***************************************************************************************/
 
 #include <common.h>
+#include <cpu/decode.h>
 
 extern uint64_t g_nr_guest_inst;
-
-static struct IringBufs iringbufs = {.start = 0, .end = 0, .str = {}};
 
 #ifndef CONFIG_TARGET_AM
 FILE *log_fp = NULL;
@@ -37,6 +36,17 @@ bool log_enable() {
          (g_nr_guest_inst <= CONFIG_TRACE_END), false);
 }
 #endif
+
+#define IringBufNum 10
+#define IringBufLen 128
+
+struct IringBufs {
+  size_t start;
+  size_t end;
+  char str[IringBufNum][IringBufLen];
+};
+
+static struct IringBufs iringbufs = {.start = 0, .end = 0, .str = {}};
 
 void update_iringbufs(char *str) {
   iringbufs.end = (iringbufs.end + 1) % IringBufNum;
@@ -58,3 +68,42 @@ void printf_iringbufs() {
   }
   printf("---> %s\n", iringbufs.str[i]);
 }
+
+static int ftrace_log_format_tabs = 0;
+static void printf_ftrace_spaces();
+
+void printf_ftrace(Decode *s) {
+  char *str;
+  if( s->jump_type ){
+    _Log("[ftrace] "FMT_PADDR": ", s->pc);
+    switch (s->jump_type) {
+      case D_CALL:
+        printf_ftrace_spaces();
+        str = load_func_from_elf(s->dnpc, true);
+        if (str == NULL) {
+          str = "???";
+        }
+        _Log("call [%s@"FMT_PADDR"]\n", str, s->dnpc);        
+        ftrace_log_format_tabs++;
+        break;
+      case D_RET:
+        ftrace_log_format_tabs--;
+        printf_ftrace_spaces();
+        str = load_func_from_elf(s->pc, false);
+        if (str == NULL) {
+          str = "???";
+        }
+        _Log("ret [%s]\n", str);
+      default:
+        break;
+    }
+  }
+}
+
+static void printf_ftrace_spaces() {
+  assert(ftrace_log_format_tabs >= 0);
+  for(int i = 0; i < ftrace_log_format_tabs; i++) {
+    _Log("  ");
+  }
+}
+
