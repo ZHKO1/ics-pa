@@ -11,7 +11,7 @@ AM_SRCS := native/trm.c \
            native/ioe/audio.c \
            native/ioe/disk.c \
 
-CFLAGS  += -fpie
+CFLAGS  += -fpie -Og -ggdb3
 ASFLAGS += -fpie -pie
 comma = ,
 LDFLAGS_CXX = $(addprefix -Wl$(comma), $(LDFLAGS))
@@ -19,6 +19,8 @@ LDFLAGS_CXX = $(addprefix -Wl$(comma), $(LDFLAGS))
 image:
 	@echo + LD "->" $(IMAGE_REL)
 	@g++ -pie -o $(IMAGE) -Wl,--whole-archive $(LINKAGE) -Wl,-no-whole-archive $(LDFLAGS_CXX) -lSDL2 -ldl
+	@$(OBJDUMP) -d $(IMAGE) > $(IMAGE).txt
+	@readelf -a $(IMAGE) > $(IMAGE).readelf
 
 run: image
 	$(IMAGE)

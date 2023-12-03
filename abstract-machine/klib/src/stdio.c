@@ -5,44 +5,47 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
+#define MAXLINE 1024
+char printf_str[MAXLINE];
+
 int printf(const char *fmt, ...) {
-  panic("Not implemented");
+  va_list arg;
+  va_start (arg, fmt);
+  int done = vsprintf(printf_str, fmt, arg);
+  va_end (arg);
+  size_t i = 0;
+  char ch;
+  while((ch = printf_str[i])){
+    putch(ch);
+    i++;
+  }
+  return done;
 }
 
-static char *itoa(int num, char *str, size_t max_bits){
+static char *itoa(int num, char *str){
   int base = 10;
-  size_t bits = 0;
+  if(num == 0){
+    *str = '0';
+    return str;
+  }
+  char *bit = str;
   if(num < 0){
-    bits++;
+    *bit = '-';
+    bit++;
   }
-  int num_tmp = num;
-  while( num_tmp ){
-    num_tmp = num_tmp / base;
-    bits++;
-  }
-  bits++; // 考虑到末尾的\0
-  if (bits > max_bits) {
-    return NULL;
-  }
-  char *result = str;
-  if(num < 0){
-    num = -num;
-    *str = '-';
-    str++;
-  }
-  char *start = str;
+  char *start = bit;
   while( num ){
-    *str = num % base + '0';
-    str++;
+    *bit = abs(num % base) + '0';
+    bit++;
     num = num / base;
   }
-  *str = '\0';
-  for (char *left = start, *right = str - 1; left < right; left++, right--){
+  *bit = '\0';
+  for (char *left = start, *right = bit - 1; left < right; left++, right--){
     char tmp = *left;
     *left = *right;
     *right = tmp;
   }
-  return result;
+  return str;
 }
 
 int vsprintf(char *out, const char *fmt, va_list ap) {
@@ -68,7 +71,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
           break;
         case 'd':
           num = va_arg(ap, int);
-          char *result = itoa(num, num_str, VSPRINTF_NUM_STR_LEN);
+          char *result = itoa(num, num_str);
           if(!result){
             panic("Error in itoa");
           }
