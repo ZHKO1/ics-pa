@@ -348,15 +348,15 @@ void test_strcat()
 void test_write()
 {
   test_memset();
-  // printf("memset pass\n");
+  printf("memset pass\n");
   test_memcpy();
-  // printf("memcpy pass\n");
+  printf("memcpy pass\n");
   test_memmove();
-  // printf("memmove pass\n");
+  printf("memmove pass\n");
   test_strcpy();
-  // printf("strcpy pass\n");
+  printf("strcpy pass\n");
   test_strncpy();
-  // printf("strncpy pass\n");
+  printf("strncpy pass\n");
   test_strcat();
-  // printf("strcat pass\n");
+  printf("strcat pass\n");
 }

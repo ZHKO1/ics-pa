@@ -84,5 +84,5 @@ void test_sprintf()
 void test_format()
 {
   test_sprintf();
-  // printf("sprintf pass\n");
+  printf("sprintf pass\n");
 }
