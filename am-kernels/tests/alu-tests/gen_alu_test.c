@@ -20,13 +20,13 @@ static const unsigned short vus[]={0x8000, 0x8001, -2, -1, 0, 1, 2, 0x7ffe, 0x7f
 static const unsigned char  vuc[]={0x80, 0x81, -2, -1, 0, 1, 2, 0x7e, 0x7f};
 
 #define TEST_STRING "  printf(\"line %%d: %%s: %%d  %%s  %%d  ==  %%d =>  %%s (%%d)\\n\","\
-                      "__LINE__,\"%s\",%d,\"%s\",%d,%d,(%s)(x%sy)==%d?\"PASS\":\"FAIL\",(%s)(x%sy));\n"
+                      "__LINE__,\"%s\",(%s)%d,\"%s\",(%s)%d,%d,(%s)(x%sy)==%d?\"PASS\":\"FAIL\",(%s)(x%sy));\n"
 
 #define TEST_STRING_F "  printf(\"%%20s: %%20f  %%2s  %%-20f  ==  %%-20f =>  %%8s (%%f)\\n\","\
-                      "\"%s\",%f,\"%s\",%f,%f,(%s)(x%sy)==%f?\"PASS\":\"FAIL\",(%s)(x%sy));\n"
+                      "\"%s\",(%s)%f,\"%s\",(%s)%f,%f,(%s)(x%sy)==%f?\"PASS\":\"FAIL\",(%s)(x%sy));\n"
 
 #define TEST_PARMS(type,set,op) \
-				#type,set[i],#op,set[j],(type)(set[i] op set[j]),#type,#op,(type)(set[i] op set[j]),#type,#op
+				#type,#type,set[i],#op,#type,set[j],(type)(set[i] op set[j]),#type,#op,(type)(set[i] op set[j]),#type,#op
 
 #define S_F "%f"
 #define S_I "%d"

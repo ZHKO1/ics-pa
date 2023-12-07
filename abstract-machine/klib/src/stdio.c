@@ -64,13 +64,18 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
       fmt_c = *fmt_p;
       switch (fmt_c) {
         case 's':
+          str = NULL;
           str = va_arg(ap, char*);
-          size_t str_len = strlen(str);
-          strncpy(out_p, str, str_len);
-          out_p += str_len;
+          if (str) {
+            size_t str_len = strlen(str);
+            strncpy(out_p, str, str_len);
+            out_p += str_len;
+          }
           break;
         case 'd':
+          num = 0;
           num = va_arg(ap, int);
+          memset(num_str, 0, VSPRINTF_NUM_STR_LEN);
           char *result = itoa(num, num_str);
           if(!result){
             panic("Error in itoa");
