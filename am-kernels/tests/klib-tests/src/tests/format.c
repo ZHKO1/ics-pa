@@ -79,6 +79,92 @@ void test_sprintf()
   done = sprintf(str, "%s地%s獄%s車%s", "奮迅脚", "急停止", "紫電カカト落とし", "踏み込み前蹴り");
   assert(done == 72);
   assert(strcmp(str, "奮迅脚地急停止獄紫電カカト落とし車踏み込み前蹴り") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%2s", "");
+  assert(done == 2);
+  assert(strcmp(str, "  ") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%2s", "a");
+  assert(done == 2);
+  assert(strcmp(str, " a") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%2s", "ab");
+  assert(done == 2);
+  assert(strcmp(str, "ab") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%2s", "abc");
+  assert(done == 3);
+  assert(strcmp(str, "abc") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "魔身%10s流酔脚%10s張弓腿", "流酔拳", "酔疾歩");
+  assert(done == 44);
+  assert(strcmp(str, "魔身 流酔拳流酔脚 酔疾歩張弓腿") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%2d", 0);
+  assert(done == 2);
+  assert(strcmp(str, " 0") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%2d", 1);
+  assert(done == 2);
+  assert(strcmp(str, " 1") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%2d", 12);
+  assert(done == 2);
+  assert(strcmp(str, "12") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%2d", 123);
+  assert(done == 3);
+  assert(strcmp(str, "123") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%2d", -10);
+  assert(done == 3);
+  assert(strcmp(str, "-10") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%02d", 0);
+  assert(done == 2);
+  assert(strcmp(str, "00") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%02d", 2);
+  assert(done == 2);
+  assert(strcmp(str, "02") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%02d", 34);
+  assert(done == 2);
+  assert(strcmp(str, "34") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%02d", 567);
+  assert(done == 3);
+  assert(strcmp(str, "567") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%02d", -89);
+  assert(done == 3);
+  assert(strcmp(str, "-89") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%04d", -10);
+  assert(done == 4);
+  assert(strcmp(str, "-010") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "無影蹴%10d爆廻%10d点辰", 666, 888);
+  assert(done == 41);
+  assert(strcmp(str, "無影蹴       666爆廻       888点辰") == 0);
+
 }
 
 void test_format()

@@ -41,22 +41,14 @@ void test_strncmp()
 void test_memcmp()
 {
   uint8_t mem1[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-  printf("memcmp pass0\n");
   assert(memcmp(mem1 + 0, mem1 + 0, 5) == 0);
-  printf("memcmp pass1\n");
   assert(memcmp(mem1 + 2, mem1 + 2, 8) == 0);
-  printf("memcmp pass2\n");
   assert(memcmp(mem1 + 0, mem1 + 1, 5) == -1);
-  printf("memcmp pass3\n");
   assert(memcmp(mem1 + 2, mem1 + 0, 5) == 2);
-  printf("memcmp pass4\n");
   assert(memcmp(mem1 + 1, mem1 + 5, 5) == -4);
-  printf("memcmp pass5\n");
   assert(memcmp(mem1 + 6, mem1 + 1, 4) == 5);
-  printf("memcmp pass6\n");
   uint8_t mem2[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 22};
   assert(memcmp(mem1, mem2, 10) == -13);
-  printf("memcmp pass7\n");
 }
 
 void test_read()
