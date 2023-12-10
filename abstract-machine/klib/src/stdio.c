@@ -30,7 +30,7 @@ static void reverse(char *str) {
   }
 }
 
-static char *itoa_abs(int num, char *str) {
+static char *itoa_abs_d(int num, char *str) {
   if(num == 0){
     *str = '0';
     return str;
@@ -40,6 +40,29 @@ static char *itoa_abs(int num, char *str) {
   int num_rest = num;
   while( num_rest ) {
     *bit = abs(num_rest % base) + '0';
+    bit++;
+    num_rest = num_rest / base;
+  }
+  *bit = '\0';
+  reverse(str);
+  return str;
+}
+static char *itoa_abs_x(unsigned int num, char *str) {
+  if(num == 0){
+    *str = '0';
+    return str;
+  }
+  int base = 16;
+  char *bit = str;
+  unsigned int num_rest = num;
+  while( num_rest ) {
+    int num_bit = abs(num_rest % base);
+    if(num_bit >= 0 && num_bit <= 9){
+      *bit = num_bit + '0';
+    } else if (num_bit > 9) {
+      *bit = num_bit - 10 + 'a';
+    } else {      
+    }
     bit++;
     num_rest = num_rest / base;
   }
@@ -73,6 +96,7 @@ void check_fmt_conversion_specifier(char **fmt_p_p, char *conversion_specifier) 
   case 's':
   case 'd':
   case 'c':
+  case 'x':
     *conversion_specifier = *fmt_p;
     (*fmt_p_p)++;
     break;  
@@ -112,6 +136,26 @@ void exect_converse_fmt_c(char **out_p_p, char c, int field_width) {
   (*out_p_p) += str_len;
 }
 
+void exect_converse_fmt_x(char **out_p_p, unsigned int num, bool is_zero_padded, int field_width) {
+  #define VSPRINTF_NUM_STR_LEN 33
+  char num_str[VSPRINTF_NUM_STR_LEN] = "";
+  memset(num_str, 0, VSPRINTF_NUM_STR_LEN);
+  char *result = itoa_abs_x(num, num_str);
+  assert(result != NULL);
+  size_t abs_num_str_len = strlen(num_str);
+  size_t num_str_len = abs_num_str_len;
+  if (field_width > num_str_len) {
+    int space_len = field_width - num_str_len;
+    while (space_len) {
+      (**out_p_p) = is_zero_padded ? '0' : ' ';
+      (*out_p_p) ++;
+      space_len--;
+    }
+  }
+  strncpy(*out_p_p, num_str, abs_num_str_len);
+  (*out_p_p) += abs_num_str_len;
+}
+
 void exect_converse_fmt_d(char **out_p_p, int num, bool is_zero_padded, int field_width) {
   #define VSPRINTF_NUM_STR_LEN 33
   char num_str[VSPRINTF_NUM_STR_LEN] = "";
@@ -120,7 +164,7 @@ void exect_converse_fmt_d(char **out_p_p, int num, bool is_zero_padded, int fiel
   if(num < 0){
     is_negative = true;
   }
-  char *result = itoa_abs(num, num_str);
+  char *result = itoa_abs_d(num, num_str);
   assert(result != NULL);
   size_t abs_num_str_len = strlen(num_str);
   size_t num_str_len = abs_num_str_len;
@@ -166,10 +210,15 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
           c = (char) va_arg(ap, int);
           exect_converse_fmt_c(&out_p, c, field_width);
           break;
+        case 'x':
+          unsigned int num_x = 0;
+          num_x = va_arg(ap, unsigned int);
+          exect_converse_fmt_x(&out_p, num_x, is_zero_padded, field_width);
+          break;
         case 'd':
-          int num = 0;
-          num = va_arg(ap, int);
-          exect_converse_fmt_d(&out_p, num, is_zero_padded, field_width);
+          int num_d = 0;
+          num_d = va_arg(ap, int);
+          exect_converse_fmt_d(&out_p, num_d, is_zero_padded, field_width);
           break;
         default:
           break;
