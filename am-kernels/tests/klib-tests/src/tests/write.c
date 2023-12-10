@@ -5,10 +5,10 @@
 #define check_char_seq(i) assert(str[(i)] == 'A' + (i))
 #define check_char_eq(i, val) assert(str[(i)] == (val));
 
-uint8_t data[N];
-char str[N];
+static uint8_t data[N];
+static char str[N];
 
-void reset()
+static void reset()
 {
   int i;
   for (i = 0; i < N; i++)
@@ -17,7 +17,7 @@ void reset()
   }
 }
 
-int check_out_range(int i)
+static int check_out_range(int i)
 {
   if (i < 0 || i >= N)
   {
@@ -26,7 +26,7 @@ int check_out_range(int i)
   return 0;
 }
 
-int check_overlap(int l1, int r1, int l2, int r2)
+static int check_overlap(int l1, int r1, int l2, int r2)
 {
   assert(l1 <= r1);
   assert(l2 <= r2);
@@ -41,7 +41,7 @@ int check_overlap(int l1, int r1, int l2, int r2)
   return 1;
 }
 
-void check_seq(int l, int r)
+static void check_seq(int l, int r)
 {
   int i;
   for (i = l; i <= r; i++)
@@ -50,7 +50,7 @@ void check_seq(int l, int r)
   }
 }
 
-void check_eq(int l, int r, int val)
+static void check_eq(int l, int r, int val)
 {
   int i;
   for (i = l; i <= r; i++)
@@ -59,7 +59,7 @@ void check_eq(int l, int r, int val)
   }
 }
 
-void reset_str()
+static void reset_str()
 {
   int i;
   for (i = 0; i < N; i++)
@@ -68,7 +68,8 @@ void reset_str()
   }
 }
 
-void str_log()
+/*
+static void str_log()
 {
   int i;
   for (i = 0; i < N; i++)
@@ -84,8 +85,9 @@ void str_log()
   }
   printf("\n");
 }
+*/
 
-void test_memset()
+static void test_memset()
 {
   int l, r;
   for (l = 0; l < N; l++)
@@ -103,7 +105,7 @@ void test_memset()
   }
 }
 
-void test_memcpy()
+static void test_memcpy()
 {
   int src, dest, n;
   for (src = 0; src < N; src++)
@@ -143,7 +145,7 @@ void test_memcpy()
   }
 }
 
-void test_memmove()
+static void test_memmove()
 {
   int src, dest, n;
   for (src = 0; src < N; src++)
@@ -182,7 +184,7 @@ void test_memmove()
   }
 }
 
-void test_strcpy()
+static void test_strcpy()
 {
   int src, dest, n;
   for (src = 0; src < N; src++)
@@ -229,7 +231,7 @@ void test_strcpy()
   }
 }
 
-void test_strncpy()
+static void test_strncpy()
 {
   // case 1: the length of src is equal to n;
   char src[N] = "0123456789";
@@ -291,7 +293,7 @@ void test_strncpy()
   }
 }
 
-void test_strcat()
+static void test_strcat()
 {
   int src, dest;
   for (src = 0; src < N; src++)

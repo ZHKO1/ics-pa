@@ -169,9 +169,11 @@ void exect_converse_fmt_d(char **out_p_p, int num, bool is_zero_padded, int fiel
   size_t abs_num_str_len = strlen(num_str);
   size_t num_str_len = abs_num_str_len;
   if(is_negative){
+    num_str_len++;
+  }
+  if(is_negative && is_zero_padded){
     (**out_p_p) = '-';
     (*out_p_p) ++;
-    num_str_len++;
   }
   if (field_width > num_str_len) {
     int space_len = field_width - num_str_len;
@@ -180,6 +182,10 @@ void exect_converse_fmt_d(char **out_p_p, int num, bool is_zero_padded, int fiel
       (*out_p_p) ++;
       space_len--;
     }
+  }
+  if(is_negative && !is_zero_padded){
+    (**out_p_p) = '-';
+    (*out_p_p) ++;
   }
   strncpy(*out_p_p, num_str, abs_num_str_len);
   (*out_p_p) += abs_num_str_len;
