@@ -72,6 +72,7 @@ void check_fmt_conversion_specifier(char **fmt_p_p, char *conversion_specifier) 
   switch (*fmt_p) {
   case 's':
   case 'd':
+  case 'c':
     *conversion_specifier = *fmt_p;
     (*fmt_p_p)++;
     break;  
@@ -95,6 +96,20 @@ void exect_converse_fmt_s(char **out_p_p, char *str, int field_width) {
     strncpy(*out_p_p, str, str_len);
     (*out_p_p) += str_len;
   }
+}
+
+void exect_converse_fmt_c(char **out_p_p, char c, int field_width) {
+  size_t str_len = 1;
+  if (field_width > str_len) {
+    int space_len = field_width - str_len;
+    while (space_len) {
+      (**out_p_p) = ' ';
+      (*out_p_p) ++;
+      space_len--;
+    }
+  }
+  (**out_p_p) = c;
+  (*out_p_p) += str_len;
 }
 
 void exect_converse_fmt_d(char **out_p_p, int num, bool is_zero_padded, int field_width) {
@@ -145,6 +160,11 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
           char *str = NULL;
           str = va_arg(ap, char*);
           exect_converse_fmt_s(&out_p, str, field_width);
+          break;
+        case 'c':
+          char c = 0;
+          c = (char) va_arg(ap, int);
+          exect_converse_fmt_c(&out_p, c, field_width);
           break;
         case 'd':
           int num = 0;

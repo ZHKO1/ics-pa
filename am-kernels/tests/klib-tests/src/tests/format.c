@@ -165,6 +165,25 @@ void test_sprintf()
   assert(done == 41);
   assert(strcmp(str, "無影蹴       666爆廻       888点辰") == 0);
 
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%c134", '\0');
+  assert(done == 4);
+  assert(strcmp(str, "") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%c", 'a');
+  assert(done == 1);
+  assert(strcmp(str, "a") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%5c", 'b');
+  assert(done == 5);
+  assert(strcmp(str, "    b") == 0);
+
+  memset(str, 0, MAXLINE);
+  done = sprintf(str, "%10c疾歩%5c仙掌%0c", '-', '.', '!');
+  assert(done == 28);
+  assert(strcmp(str, "         -疾歩    .仙掌!") == 0);
 }
 
 void test_format()
