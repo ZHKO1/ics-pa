@@ -35,9 +35,9 @@ void device_update();
 bool check_wps();
 
 void update_iringbufs(char *str);
-void printf_iringbufs();
+void iring_display();
 
-void printf_ftrace(Decode *s);
+void ftrace(Decode *s);
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
@@ -47,7 +47,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
   IFDEF(CONFIG_WATCHPOINT, if(check_wps() && (nemu_state.state == NEMU_RUNNING)){ nemu_state.state = NEMU_STOP; });
 
-  IFDEF(CONFIG_FTRACE, printf_ftrace(_this));
+  IFDEF(CONFIG_FTRACE, ftrace(_this));
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {
@@ -105,7 +105,7 @@ static void statistic() {
 void assert_fail_msg() {
   isa_reg_display();
 #ifdef CONFIG_ITRACE
-  printf_iringbufs();
+  iring_display();
 #endif
   statistic();
 }

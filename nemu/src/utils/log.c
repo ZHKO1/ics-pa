@@ -59,7 +59,7 @@ void update_iringbufs(char *str) {
   }
 }
 
-void printf_iringbufs() {
+void iring_display() {
   printf("last %d instructions:\n", IringBufNum);
   size_t i = iringbufs.start;
   while (i != iringbufs.end) {
@@ -70,40 +70,44 @@ void printf_iringbufs() {
 }
 
 static int ftrace_log_format_tabs = 0;
-static void printf_ftrace_spaces();
+static void format_spaces_ftrace(char *log);
 
-void printf_ftrace(Decode *s) {
+void ftrace(Decode *s) {
+  #define MAX_LEN 2048
+  char space[MAX_LEN] = "";
   char *str;
   if( s->jump_type ){
-    _Log("[ftrace] "FMT_PADDR": ", s->pc);
     switch (s->jump_type) {
       case D_CALL:
-        printf_ftrace_spaces();
+        format_spaces_ftrace(space);
         str = load_func_from_elf(s->dnpc, true);
         if (str == NULL) {
           str = "???";
         }
-        _Log("call [%s@"FMT_PADDR"]\n", str, s->dnpc);        
+        Log(FMT_PADDR": %scall [%s@"FMT_PADDR"]", s->pc, space, str, s->dnpc); 
         ftrace_log_format_tabs++;
         break;
       case D_RET:
         ftrace_log_format_tabs--;
-        printf_ftrace_spaces();
+        format_spaces_ftrace(space);
         str = load_func_from_elf(s->pc, false);
         if (str == NULL) {
           str = "???";
         }
-        _Log("ret [%s]\n", str);
+        Log(FMT_PADDR": %sret  [%s]", s->pc, space, str); 
       default:
         break;
     }
   }
 }
 
-static void printf_ftrace_spaces() {
+static void format_spaces_ftrace(char *space) {
   assert(ftrace_log_format_tabs >= 0);
-  for(int i = 0; i < ftrace_log_format_tabs; i++) {
-    _Log("  ");
+  int i = 0;
+  for(; i < ftrace_log_format_tabs; i++) {
+    space[2 * i] = ' ';
+    space[2 * i + 1] = ' ';
   }
+  space[2 * i] = '\0';
 }
 
