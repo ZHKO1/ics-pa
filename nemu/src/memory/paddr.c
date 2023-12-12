@@ -27,12 +27,22 @@ static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
 paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 
+static inline void mtrace(char *type, paddr_t addr, int len, word_t data) {
+#ifdef CONFIG_MTRACE
+  if(addr - CONFIG_MTRACE_START_ADDRESS <= CONFIG_MTRACE_RANGE){
+    Log("[%s] address = "FMT_PADDR", len = %d, data = "FMT_WORD,type, addr, len, data);
+  }
+#endif
+}
+
 static word_t pmem_read(paddr_t addr, int len) {
   word_t ret = host_read(guest_to_host(addr), len);
+  mtrace("R", addr, len, ret);
   return ret;
 }
 
 static void pmem_write(paddr_t addr, int len, word_t data) {
+  mtrace("W", addr, len, data);
   host_write(guest_to_host(addr), len, data);
 }
 
@@ -50,24 +60,14 @@ void init_mem() {
   Log("physical memory area [" FMT_PADDR ", " FMT_PADDR "]", PMEM_LEFT, PMEM_RIGHT);
 }
 
-static inline word_t mtrace(char *type, paddr_t addr, int len, word_t data) {
-#ifdef CONFIG_MTRACE
-  if(addr - CONFIG_MTRACE_START_ADDRESS < CONFIG_MTRACE_RANGE){
-    Log("[%s] address = "FMT_PADDR", len = %d, data = "FMT_WORD,type, addr, len, data);
-  }
-#endif
-  return data;
-}
-
 word_t paddr_read(paddr_t addr, int len) {
-  if (likely(in_pmem(addr))) return mtrace("R", addr, len, pmem_read(addr, len));
-  IFDEF(CONFIG_DEVICE, return mtrace("R", addr, len, mmio_read(addr, len)));
+  if (likely(in_pmem(addr))) return pmem_read(addr, len);
+  IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   out_of_bound(addr);
   return 0;
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
-  mtrace("W", addr, len, data);
   if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   out_of_bound(addr);
