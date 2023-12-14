@@ -35,8 +35,8 @@ static int freq = 0;
 static uint8_t channels = 0;
 static uint16_t samples = 0;
 static uint32_t sbuf_size = CONFIG_SB_SIZE;
-static uint32_t sbuf_right = 0;
-static uint32_t sbuf_left = 0;
+static uint32_t sbuf_right = 0; // 待写入位置
+static uint32_t sbuf_left = 0;  // 待读取位置
 
 
 void audio_callback ( void*  userdata, Uint8* stream, int len ) {
@@ -55,7 +55,6 @@ void audio_callback ( void*  userdata, Uint8* stream, int len ) {
   if (len > nread) {
     memset(stream + nread, 0, len - nread);
   }
-  printf("sbuf_left = %x sbuf_right = %x\n", sbuf_left, sbuf_right);
 }
 
 static void audio_init(int freq, uint8_t channels, uint16_t samples) {

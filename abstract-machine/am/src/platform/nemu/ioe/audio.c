@@ -53,7 +53,6 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
     if (rest_bufsize < ready_write_bufsize) {
       printf("Not enough space in the sbuf, waiting for SDL library to read.[rest_bufsize = 0x%x ready_write_bufsize = 0x%x]\n", rest_bufsize, ready_write_bufsize);
     }
-
     // 不确定会不会死循环
   } while(rest_bufsize < ready_write_bufsize);
 
@@ -61,5 +60,5 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
     uint8_t sound_byte = *((uint8_t *)ctl->buf.start + offset);
     outb(AUDIO_SBUF_ADDR + (right + offset) % bufsize, sound_byte);
   }
-  outl(AUDIO_SBUF_RIGHT_ADDR, right + ready_write_bufsize - 1);
+  outl(AUDIO_SBUF_RIGHT_ADDR, right + ready_write_bufsize);
 }
