@@ -30,6 +30,24 @@ static void reverse(char *str) {
   }
 }
 
+static int get_base_of_unsigned_int(char conversion_specifier){
+  int base = 0;
+  switch (conversion_specifier) {
+    case 'o':
+      base = 8;
+      break;
+    case 'u':
+      base = 10;
+      break;
+    case 'x':
+      base = 16;
+      break;          
+    default:
+      break;
+  }
+  return base;
+}
+
 static char *itoa_abs_d(int num, char *str) {
   if(num == 0){
     *str = '0';
@@ -47,12 +65,11 @@ static char *itoa_abs_d(int num, char *str) {
   reverse(str);
   return str;
 }
-static char *itoa_abs_x(unsigned int num, char *str) {
+static char *itoa_abs_unsigned_int(unsigned int num, char *str, int base) {
   if(num == 0){
     *str = '0';
     return str;
   }
-  int base = 16;
   char *bit = str;
   unsigned int num_rest = num;
   while( num_rest ) {
@@ -96,6 +113,8 @@ void check_fmt_conversion_specifier(char **fmt_p_p, char *conversion_specifier) 
   case 's':
   case 'd':
   case 'c':
+  case 'o':
+  case 'u':
   case 'x':
     *conversion_specifier = *fmt_p;
     (*fmt_p_p)++;
@@ -136,11 +155,11 @@ void exect_converse_fmt_c(char **out_p_p, char c, int field_width) {
   (*out_p_p) += str_len;
 }
 
-void exect_converse_fmt_x(char **out_p_p, unsigned int num, bool is_zero_padded, int field_width) {
+void exect_converse_fmt_unsigned_int(char **out_p_p, unsigned int num, bool is_zero_padded, int field_width, int base) {
   #define VSPRINTF_NUM_STR_LEN 33
   char num_str[VSPRINTF_NUM_STR_LEN] = "";
   memset(num_str, 0, VSPRINTF_NUM_STR_LEN);
-  char *result = itoa_abs_x(num, num_str);
+  char *result = itoa_abs_unsigned_int(num, num_str, base);
   assert(result != NULL);
   size_t abs_num_str_len = strlen(num_str);
   size_t num_str_len = abs_num_str_len;
@@ -205,6 +224,7 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
       check_fmt_field_width(&fmt_p, &field_width);
       char conversion_specifier = 0;
       check_fmt_conversion_specifier(&fmt_p, &conversion_specifier);
+      int base = 10;
       switch (conversion_specifier) {
         case 's':
           char *str = NULL;
@@ -216,10 +236,13 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
           c = (char) va_arg(ap, int);
           exect_converse_fmt_c(&out_p, c, field_width);
           break;
+        case 'o':
+        case 'u':
         case 'x':
+          base = get_base_of_unsigned_int(conversion_specifier);
           unsigned int num_x = 0;
           num_x = va_arg(ap, unsigned int);
-          exect_converse_fmt_x(&out_p, num_x, is_zero_padded, field_width);
+          exect_converse_fmt_unsigned_int(&out_p, num_x, is_zero_padded, field_width, base);
           break;
         case 'd':
           int num_d = 0;
