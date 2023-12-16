@@ -215,7 +215,7 @@ config DIFFTEST_REF_NAME
 
 config WATCHPOINT
   bool "Enable watchpoint"
-  default y
+  default n
 
 config MTRACE
   depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
