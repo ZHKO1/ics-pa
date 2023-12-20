@@ -41,6 +41,7 @@ static void welcome() {
 #include <getopt.h>
 
 void sdb_set_batch_mode();
+extern void sdb_test_gen_expr_mode();
 
 static char *log_file = NULL;
 static char *diff_so_file = NULL;
@@ -77,13 +78,15 @@ static int parse_args(int argc, char *argv[]) {
     {"diff"     , required_argument, NULL, 'd'},
     {"port"     , required_argument, NULL, 'p'},
     {"elf"      , required_argument, NULL, 'e'},
+    {"genexpr"  , no_argument      , NULL, 'g'},
     {"help"     , no_argument      , NULL, 'h'},
     {0          , 0                , NULL,  0 },
   };
   int o;
-  while ( (o = getopt_long(argc, argv, "-bhe:l:d:p:", table, NULL)) != -1) {
+  while ( (o = getopt_long(argc, argv, "-bhge:l:d:p:", table, NULL)) != -1) {
     switch (o) {
       case 'b': sdb_set_batch_mode(); break;
+      case 'g': sdb_test_gen_expr_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'l': log_file = optarg; break;
       case 'd': diff_so_file = optarg; break;

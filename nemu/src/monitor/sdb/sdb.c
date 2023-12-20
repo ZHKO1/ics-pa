@@ -22,12 +22,14 @@
 #include <memory/paddr.h>
 
 static int is_batch_mode = false;
+extern bool is_test_gen_expr_mode;
 
-void init_regex();
+extern void init_expr();
 void init_wp_pool();
 bool new_wp(char *expression);
 void free_wp(int no);
 void printf_wps();
+void check_expr();
 
 word_t expr(char *e, bool *success);
 
@@ -207,6 +209,11 @@ void sdb_mainloop() {
     return;
   }
 
+  if (is_test_gen_expr_mode) {
+    check_expr();
+    return;
+  }
+
   for (char *str; (str = rl_gets()) != NULL; ) {
     char *str_end = str + strlen(str);
 
@@ -241,7 +248,7 @@ void sdb_mainloop() {
 
 void init_sdb() {
   /* Compile the regular expressions. */
-  init_regex();
+  init_expr();
 
   /* Initialize the watchpoint pool. */
   init_wp_pool();

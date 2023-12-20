@@ -25,6 +25,8 @@
 #include <readline/history.h>
 #include <memory/paddr.h>
 
+static void init_tokens();
+static void init_regex();
 
 #define SET_FAILED(format_buf, ...) \
   do { \
@@ -80,10 +82,15 @@ static struct rule {
 
 static regex_t re[NR_REGEX] = {};
 
+void init_expr() {
+  init_regex();
+  init_tokens();
+}
+
 /* Rules are used for many times.
  * Therefore we compile them only once before any usage.
  */
-void init_regex() {
+static void init_regex() {
   int i;
   char error_msg[128];
   int ret;
@@ -102,10 +109,17 @@ typedef struct token {
   char str[32];
 } Token;
 
-// 如果要配合tools/gen-expr/测试，TOKENSLEN需要改成65535
-#define TOKENSLEN 32
-static Token tokens[TOKENSLEN] __attribute__((used)) = {};
+bool is_test_gen_expr_mode = false;
+static size_t token_len = 32;
+static Token *tokens __attribute__((used));
 static int nr_token __attribute__((used))  = 0;
+
+static void init_tokens(){
+  if (is_test_gen_expr_mode) {
+    token_len = 65535;
+  }
+  tokens = malloc(sizeof(Token) * token_len);
+}
 
 static bool is_token_bl_or_uop(int token_type){
   switch (token_type) {
@@ -138,7 +152,7 @@ static bool is_token_op(int token_type){
 }
 
 static int add_token(int token_type, char* substr_start, int substr_len, int *nr_token){
-  assert(*nr_token < TOKENSLEN);
+  assert(*nr_token < token_len);
   Token new_token = {token_type, };
   if( substr_len > 31){
     printf("The str in struct Token can't contain more than 32 characters.\n");
@@ -424,6 +438,10 @@ word_t expr(char *e, bool *success) {
   return eval(0, nr_token - 1, success);
 }
 
+void sdb_test_gen_expr_mode() {
+  is_test_gen_expr_mode = true;
+}
+
 void check_expr() {
   unsigned except = 0;
   unsigned index = 0;
@@ -453,4 +471,5 @@ void check_expr() {
     }
     index++;
   }
+  exit(0);
 }
