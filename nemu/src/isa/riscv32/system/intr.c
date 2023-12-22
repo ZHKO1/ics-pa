@@ -14,13 +14,16 @@
 ***************************************************************************************/
 
 #include <isa.h>
+#include "../local-include/reg.h"
 
 word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   /* TODO: Trigger an interrupt/exception with ``NO''.
    * Then return the address of the interrupt/exception vector.
    */
+  set_csr(CSR_MEPC, epc);
+  set_csr(CSR_MCAUSE, NO);
 
-  return 0;
+  return get_csr(CSR_MTVEC);
 }
 
 word_t isa_query_intr() {

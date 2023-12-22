@@ -30,4 +30,12 @@ static inline const char* reg_name(int idx) {
   return regs[check_reg_idx(idx)];
 }
 
+#define CSR_MSTATUS 0x300
+#define CSR_MTVEC 0x305
+#define CSR_MEPC 0x341
+#define CSR_MCAUSE 0x342
+
+word_t get_csr(word_t key);
+void set_csr(word_t key, word_t value);
+
 #endif
