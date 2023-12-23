@@ -38,4 +38,13 @@ static inline const char* reg_name(int idx) {
 word_t get_csr(word_t key);
 void set_csr(word_t key, word_t value);
 
+#define get_mcause(inter, exccode) ((inter ? (~((word_t)(-1) >> 1)) : 0) | exccode)
+#define inter_from_mcause(mcause) ((mcause & (~((word_t)(-1) >> 1))) ? 1 : 0)
+#define exccode_from_mcause(mcause) ((mcause << 1) >> 1)
+
+#define MCAUSE_CASE(name, inter, exccode) \
+  enum { MCAUSE_##name = get_mcause(inter, exccode) }; 
+
+MCAUSE_CASE(ENVIRONMENTCALL, 0, 11)
+
 #endif

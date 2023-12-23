@@ -31,4 +31,11 @@ enum { MODE_U, MODE_S, MODE_M = 3 };
 #define MSTATUS_UXL  0
 #endif
 
+#define get_mcause(inter, exccode) ((inter ? (1 << (__riscv_xlen - 1)) : 0) | exccode)
+
+#define MCAUSE_CASE(name, inter, exccode) \
+  enum { MCAUSE_##name = get_mcause(inter, exccode) }; 
+
+MCAUSE_CASE(ENVIRONMENTCALL, 0, 11)
+
 #endif

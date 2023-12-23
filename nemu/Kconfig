@@ -252,6 +252,11 @@ config FTRACE
   bool "Enable function tracer (call or ret)"
   default n
 
+config ETRACE
+  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  bool "Enable interrupt/exception tracer"
+  default n
+
 endmenu
 
 if MODE_SYSTEM

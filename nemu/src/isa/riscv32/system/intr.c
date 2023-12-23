@@ -16,10 +16,18 @@
 #include <isa.h>
 #include "../local-include/reg.h"
 
+static inline void etrace(word_t NO, vaddr_t epc) {
+#ifdef CONFIG_ETRACE
+    Log(" mcause = "FMT_WORD"(Interrupt = %d, Exception Code = %02d), mepc = "FMT_PADDR, NO, inter_from_mcause(NO), exccode_from_mcause(NO), epc);
+#endif
+}
+
 word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   /* TODO: Trigger an interrupt/exception with ``NO''.
    * Then return the address of the interrupt/exception vector.
    */
+  etrace(NO, epc);
+
   set_csr(CSR_MEPC, epc);
   set_csr(CSR_MCAUSE, NO);
 
