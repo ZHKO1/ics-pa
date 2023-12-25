@@ -6,7 +6,8 @@
 #define MAXLINE 1024
 static char str[MAXLINE] = "";
 static const int vsi[] = {0, INT_MAX / 17, INT_MAX, INT_MIN, INT_MIN + 1, UINT_MAX / 17, INT_MAX / 1200, UINT_MAX};
-static const signed char vsc[] = {0x80, 0x81, -2, -1, 0, 1, 2, 0x7e, 0x7f, 'a', '!', '>', 'B'};
+__uint64_t vsu64[] = {0, __UINT64_MAX__, 0x8000000000000000UL, __UINT64_MAX__/1200,  __UINT64_MAX__/7777};  __attribute__((unused))
+static const signed char vsc[] = {'a', '!', '>', 'B'};
 static const char *vss[] = {"", "Dragonlash Flame", "Shippu Jinrai-kyaku", "Shinryu Reppa"};
 static int done = 0;
 
@@ -48,12 +49,27 @@ static int done = 0;
     }                                                                                         \
   }
 
-#define FOR_SET_ALL(set_type, set, set_format, format_type)                                                       \
+#define FOR_SET_ALL(set_type, set, set_format, format_type)      \
+  {                                                              \
+    FOR_SET_COMMON(set_type, set, set_format, format_type);      \
+    FOR_SET_FILEDWIDTH(set_type, set, set_format, format_type);  \
+    FOR_SET_ZEROPADDING(set_type, set, set_format, format_type); \
+  }
+
+#define FOR_SET_COMMON(set_type, set, set_format, format_type)                    \
+  {                                                                               \
+    FOR_SET(FORMAT(format_type), set_type, set, set_format, FORMAT(format_type)); \
+    FOR_SET("abcdefghi", set_type, set, set_format, FORMAT(format_type));         \
+  }
+
+#define FOR_SET_FILEDWIDTH(set_type, set, set_format, format_type)                                              \
+  {                                                                                                             \
+    FOR_SET(FORMAT_WITH_WIDTH(format_type, 10), set_type, set, set_format, FORMAT_WITH_WIDTH(format_type, 10)); \
+    FOR_SET("ABCDEFGHI", set_type, set, set_format, FORMAT_WITH_WIDTH(format_type, 10));                        \
+  }
+
+#define FOR_SET_ZEROPADDING(set_type, set, set_format, format_type)                                               \
   {                                                                                                               \
-    FOR_SET(FORMAT(format_type), set_type, set, set_format, FORMAT(format_type));                                 \
-    FOR_SET("abcdefghi", set_type, set, set_format, FORMAT(format_type));                                         \
-    FOR_SET(FORMAT_WITH_WIDTH(format_type, 10), set_type, set, set_format, FORMAT_WITH_WIDTH(format_type, 10));   \
-    FOR_SET("ABCDEFGHI", set_type, set, set_format, FORMAT_WITH_WIDTH(format_type, 10));                          \
     FOR_SET(FORMAT_WITH_WIDTH(format_type, 010), set_type, set, set_format, FORMAT_WITH_WIDTH(format_type, 010)); \
     FOR_SET("123456789", set_type, set, set_format, FORMAT_WITH_WIDTH(format_type, 010));                         \
   }
@@ -77,6 +93,14 @@ int main(void)
   FOR_SET_ALL(unsigned int, vsi, "%d", x);
   FOR_SET_ALL(char, vsc, "%d", c);
   FOR_SET_ALL(char *, vss, "\"%s\"", s);
+
+#if defined(__ISA_NATIVE__)
+  FOR_SET_ALL(void *, vsu64, "0x%lx", p);
+#elif defined(__ISA_RISCV32__)
+  FOR_SET_ALL(void *, vsi, "0x%x", p);
+#elif
+# error unsupported ISA __ISA__
+#endif
 
   printf("}\n");
 

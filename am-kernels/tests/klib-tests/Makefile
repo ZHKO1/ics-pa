@@ -7,7 +7,9 @@ GENERATOR = build/format
 
 $(GENERATOR): gen_format_test.c
 	@mkdir -p $(dir $@)
-	gcc -O2 -Wall -Werror -Wno-format-zero-length -ggdb3 $^ -o $@
+	@gcc -O2 -Wall -Werror -Wno-format-zero-length -ggdb3 \
+	-D__ISA__=\"$(ISA)\" -D__ISA_$(shell echo $(ISA) | tr a-z A-Z)__ \
+	 $^ -o $@
 
 $(SRCS_FORMAT): $(GENERATOR)
 	$^ > $@

@@ -1,4 +1,5 @@
 #include <am.h>
+#include <stdint.h>
 #include <klib.h>
 #include <klib-macros.h>
 #include <stdarg.h>
@@ -65,7 +66,7 @@ static char *itoa_abs_d(int num, char *str) {
   reverse(str);
   return str;
 }
-static char *itoa_abs_unsigned_int(unsigned int num, char *str, int base) {
+static char *itoa_unsigned_int(unsigned int num, char *str, int base) {
   if(num == 0){
     *str = '0';
     return str;
@@ -73,7 +74,7 @@ static char *itoa_abs_unsigned_int(unsigned int num, char *str, int base) {
   char *bit = str;
   unsigned int num_rest = num;
   while( num_rest ) {
-    int num_bit = abs(num_rest % base);
+    int num_bit = num_rest % base;
     if(num_bit >= 0 && num_bit <= 9){
       *bit = num_bit + '0';
     } else if (num_bit > 9) {
@@ -83,6 +84,30 @@ static char *itoa_abs_unsigned_int(unsigned int num, char *str, int base) {
     bit++;
     num_rest = num_rest / base;
   }
+  *bit = '\0';
+  reverse(str);
+  return str;
+}
+static char *itoa_ptr(uintptr_t num, char *str) {
+  if(num == 0){
+    strcpy(str, "(nil)");
+    return str;
+  }
+  int base = 16;
+  char *bit = str;
+  uintptr_t num_rest = num;
+  while( num_rest ) {
+    int num_bit = num_rest % base;
+    if(num_bit >= 0 && num_bit <= 9){
+      *bit = num_bit + '0';
+    } else if (num_bit > 9) {
+      *bit = num_bit - 10 + 'a';
+    } else {      
+    }
+    bit++;
+    num_rest = num_rest / base;
+  }
+  bit = bit + 2;
   *bit = '\0';
   reverse(str);
   return str;
@@ -116,6 +141,7 @@ void check_fmt_conversion_specifier(char **fmt_p_p, char *conversion_specifier) 
   case 'o':
   case 'u':
   case 'x':
+  case 'p':
     *conversion_specifier = *fmt_p;
     (*fmt_p_p)++;
     break;  
@@ -159,7 +185,7 @@ void exect_converse_fmt_unsigned_int(char **out_p_p, unsigned int num, bool is_z
   #define VSPRINTF_NUM_STR_LEN 33
   char num_str[VSPRINTF_NUM_STR_LEN] = "";
   memset(num_str, 0, VSPRINTF_NUM_STR_LEN);
-  char *result = itoa_abs_unsigned_int(num, num_str, base);
+  char *result = itoa_unsigned_int(num, num_str, base);
   assert(result != NULL);
   size_t abs_num_str_len = strlen(num_str);
   size_t num_str_len = abs_num_str_len;
@@ -210,6 +236,43 @@ void exect_converse_fmt_d(char **out_p_p, int num, bool is_zero_padded, int fiel
   (*out_p_p) += abs_num_str_len;
 }
 
+void exect_converse_fmt_p(char **out_p_p, uintptr_t address, bool is_zero_padded, int field_width) {
+  #define VSPRINTF_NUM_STR_LEN 33
+  char num_str[VSPRINTF_NUM_STR_LEN] = "";
+  memset(num_str, 0, VSPRINTF_NUM_STR_LEN);
+  char *result = itoa_ptr(address, num_str);
+  assert(result != NULL);
+
+  size_t abs_num_str_len = strlen(num_str);
+  size_t num_str_len = abs_num_str_len;
+
+  if (address) {
+    num_str_len = num_str_len + 2;
+    if(is_zero_padded){
+      (**out_p_p) = '0';
+      (*((*out_p_p) + 1)) = 'x';
+      (*out_p_p) += 2;
+    }
+  } else {
+    is_zero_padded = false;
+  }
+  if (field_width > num_str_len) {
+    int space_len = field_width - num_str_len;
+    while (space_len) {
+      (**out_p_p) = is_zero_padded ? '0' : ' ';
+      (*out_p_p) ++;
+      space_len--;
+    }
+  }
+  if(address && !is_zero_padded) {
+    (**out_p_p) = '0';
+    (*((*out_p_p) + 1)) = 'x';
+    (*out_p_p) += 2;
+  }
+  strncpy(*out_p_p, num_str, abs_num_str_len);
+  (*out_p_p) += abs_num_str_len;
+}
+
 int vsprintf(char *out, const char *fmt, va_list ap) {
   char *out_p = out;
   char *fmt_p = (char *) fmt;
@@ -248,6 +311,11 @@ int vsprintf(char *out, const char *fmt, va_list ap) {
           int num_d = 0;
           num_d = va_arg(ap, int);
           exect_converse_fmt_d(&out_p, num_d, is_zero_padded, field_width);
+          break;
+        case 'p':
+          uintptr_t ptr_address = 0;
+          ptr_address = va_arg(ap, uintptr_t);
+          exect_converse_fmt_p(&out_p, ptr_address, is_zero_padded, field_width);
           break;
         default:
           break;
