@@ -21,5 +21,5 @@ init NJU-ProjectN/nemu ics2023 nemu true NEMU_HOME
 init NJU-ProjectN/abstract-machine ics2023 abstract-machine true AM_HOME
 init NJU-ProjectN/fceux-am ics2021 fceux-am false
 init NJU-ProjectN/am-kernels ics2021 am-kernels false
-# init NJU-ProjectN/nanos-lite ics2021 nanos-lite true
-# init NJU-ProjectN/navy-apps ics2023 navy-apps true NAVY_HOME
+init NJU-ProjectN/nanos-lite ics2021 nanos-lite true
+init NJU-ProjectN/navy-apps ics2023 navy-apps true NAVY_HOME

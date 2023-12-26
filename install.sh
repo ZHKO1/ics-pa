@@ -18,4 +18,6 @@ apt-get install -y bison flex
 
 apt-get install -y openssh-server
 
+apt-get install -y device-tree-compiler
+
 echo "Install is complete."
