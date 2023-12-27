@@ -257,6 +257,11 @@ config ETRACE
   bool "Enable interrupt/exception tracer"
   default n
 
+config STRACE
+  depends on TRACE && TARGET_NATIVE_ELF && ENGINE_INTERPRETER
+  bool "Enable system call tracer"
+  default n
+
 endmenu
 
 if MODE_SYSTEM

@@ -6,7 +6,7 @@
 //#define HAS_VME
 //#define MULTIPROGRAM
 //#define TIME_SHARING
-
+#include <autoconf.h>
 #include <am.h>
 #include <klib.h>
 #include <klib-macros.h>

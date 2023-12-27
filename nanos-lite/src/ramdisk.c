@@ -31,3 +31,8 @@ void init_ramdisk() {
 size_t get_ramdisk_size() {
   return RAMDISK_SIZE;
 }
+
+void *get_ramdisk_ptr_by_offset(size_t offset) {
+  assert(offset <= RAMDISK_SIZE);
+  return &ramdisk_start + offset;
+}
