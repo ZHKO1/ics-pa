@@ -30,7 +30,18 @@ void do_syscall(Context *c) {
       c->GPRx = 0;
       strace_ret("yield", c);
       break;
-
+    case SYS_write:
+      int fd = c->GPR2;
+      char *buf = (char *)c->GPR3;
+      size_t len = c->GPR4;
+      if ((fd == 1) || (fd == 2)) {
+        for (size_t i = 0; i < len; i++) putch(*(buf + i));
+        c->GPRx = len;
+      } else {
+        panic("Not support fd(%d) in SYS_write", fd);
+      }
+      strace_ret("write", c);
+      break;
     default: panic("Unhandled syscall ID = %d", a[0]);
   }
 }
