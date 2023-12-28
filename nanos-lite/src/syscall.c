@@ -2,6 +2,8 @@
 #include <common.h>
 #include "syscall.h"
 
+int mm_brk(uintptr_t brk);
+
 static inline void strace(char *system_call_name, Context *c, bool ingnore_ret) {
 #ifdef CONFIG_ETRACE
   if (ingnore_ret) {
@@ -41,6 +43,11 @@ void do_syscall(Context *c) {
         panic("Not support fd(%d) in SYS_write", fd);
       }
       strace_ret("write", c);
+      break;
+    case SYS_brk:
+      uintptr_t program_break = c->GPR2;
+      c->GPRx = mm_brk(program_break);
+      strace_ret("brk", c);
       break;
     default: panic("Unhandled syscall ID = %d", a[0]);
   }

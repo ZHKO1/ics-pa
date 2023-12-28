@@ -18,6 +18,9 @@ void free_page(void *p) {
 
 /* The brk() system call handler. */
 int mm_brk(uintptr_t brk) {
+  if ( (void *)brk > heap.end ){
+    return -1;
+  }
   return 0;
 }
 
