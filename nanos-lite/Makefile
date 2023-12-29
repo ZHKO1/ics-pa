@@ -11,7 +11,7 @@ else
 INC_PATH += include $(NAVY_HOME)/libs/libc/include
 endif
 
-# 获取nemu目录下的CONFIG_STRACE配置
+# 获取nemu目录下的CONFIG配置
 INC_PATH += $(NEMU_HOME)/include/generated 
 
 ./src/resources.S: $(RAMDISK_FILE)
@@ -21,6 +21,9 @@ ifeq ($(HAS_NAVY),)
 files = $(RAMDISK_FILE) src/files.h src/syscall.h
 # create an empty file if it does not exist
 $(foreach f,$(files),$(if $(wildcard $f),, $(shell touch $f)))
+
+# 这里函数调用的踪迹（ftrace）先只显示RAMDISK_FILE内部的踪迹
+NEMUFLAGS = -l $(shell dirname $(IMAGE).elf)/nemu-log.txt -b --elf=$(shell realpath $(RAMDISK_FILE))
 
 create_img:
 	$(MAKE) -s -C $(NAVY_HOME)/tests/$(TARGET) ISA=$(ISA)

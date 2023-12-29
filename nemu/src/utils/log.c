@@ -79,22 +79,20 @@ void ftrace(Decode *s) {
   if( s->jump_type ){
     switch (s->jump_type) {
       case D_CALL:
-        format_spaces_ftrace(space);
         str = load_func_from_elf(s->dnpc, true);
-        if (str == NULL) {
-          str = "???";
+        if (str) {
+          format_spaces_ftrace(space);
+          Log(FMT_PADDR": %scall [%s@"FMT_PADDR"]", s->pc, space, str, s->dnpc); 
+          ftrace_log_format_tabs++;
         }
-        Log(FMT_PADDR": %scall [%s@"FMT_PADDR"]", s->pc, space, str, s->dnpc); 
-        ftrace_log_format_tabs++;
         break;
       case D_RET:
-        ftrace_log_format_tabs--;
-        format_spaces_ftrace(space);
         str = load_func_from_elf(s->pc, false);
-        if (str == NULL) {
-          str = "???";
+        if (str) {
+          ftrace_log_format_tabs--;
+          format_spaces_ftrace(space);
+          Log(FMT_PADDR": %sret  [%s]", s->pc, space, str); 
         }
-        Log(FMT_PADDR": %sret  [%s]", s->pc, space, str); 
       default:
         break;
     }
