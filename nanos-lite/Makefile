@@ -1,4 +1,4 @@
-#HAS_NAVY = 1
+HAS_NAVY = 1
 RAMDISK_FILE = build/ramdisk.img
 
 NAME = nanos-lite
@@ -34,6 +34,12 @@ else
 ifeq ($(wildcard $(NAVY_HOME)/libs/libos/src/syscall.h),)
   $(error $$NAVY_HOME must be a Navy-apps repo)
 endif
+
+APPS =
+TESTS = file-test
+NAVY_ELF_PATHS = $(foreach elf,$(APPS),$(NAVY_HOME)/apps/$(elf)/build/$(elf)-$(ISA))
+NAVY_ELF_PATHS += $(foreach elf,$(TESTS),$(NAVY_HOME)/tests/$(elf)/build/$(elf)-$(ISA))
+NEMUFLAGS = -l $(shell dirname $(IMAGE).elf)/nemu-log.txt -b $(addprefix --elf=, $(NAVY_ELF_PATHS))
 
 update:
 	$(MAKE) -s -C $(NAVY_HOME) ISA=$(ISA) ramdisk

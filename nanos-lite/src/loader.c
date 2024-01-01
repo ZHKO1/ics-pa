@@ -1,5 +1,6 @@
 #include <proc.h>
 #include <elf.h>
+#include <fs.h>
 
 #ifdef __LP64__
 # define Elf_Ehdr Elf64_Ehdr
@@ -25,12 +26,17 @@
 # error Unsupported ISA
 #endif
 
-void *get_ramdisk_ptr_by_offset(size_t offset);
-size_t ramdisk_read(void *buf, size_t offset, size_t len);
-
+static int elf_fd = 0;
 static Elf_Ehdr *elf_ehdr_ptr = NULL;
 static Elf_Phdr *elf_phdrs_ptr = NULL;
 
+static void *get_data_from_ramdisk_ptr(size_t offset, size_t size) {
+  void *buf = malloc(size);
+  fs_lseek(elf_fd, offset, SEEK_SET);
+  size_t read_len = fs_read(elf_fd, buf, size);
+  assert(read_len == size);
+  return buf;
+}
 
 static void check_elf_mag() {
   char *e_ident = (char *)elf_ehdr_ptr;
@@ -55,10 +61,9 @@ static void check_elf_mag() {
 
 static void load_elf_program_header() {
   /*
-  printf("Program header table file offset: %x\n", elf_ehdr_ptr->e_phoff);
+  printf("Program header table file offset: %d\n", elf_ehdr_ptr->e_phoff);
   printf("Program header table entry size: %d\n", elf_ehdr_ptr->e_phentsize);
   printf("Program header table entry count: %d\n", elf_ehdr_ptr->e_phnum);
-  printf("Program header string table index: %d\n", elf_ehdr_ptr->e_shstrndx);
   */
   size_t phdr_size = sizeof(Elf_Phdr);
   Elf_Half e_phentsize = elf_ehdr_ptr->e_phentsize;
@@ -67,7 +72,7 @@ static void load_elf_program_header() {
   Elf_Half e_phnum = elf_ehdr_ptr->e_phnum;
 
   Elf_Off e_phoff = elf_ehdr_ptr->e_phoff;
-  elf_phdrs_ptr = (Elf_Phdr *) get_ramdisk_ptr_by_offset(e_phoff);
+  elf_phdrs_ptr = (Elf_Phdr *)get_data_from_ramdisk_ptr(e_phoff, sizeof(Elf_Phdr) * e_phnum);
 
   for (size_t i = 0; i < e_phnum; i++) {
     Elf_Phdr *phdr = elf_phdrs_ptr + i;
@@ -84,7 +89,8 @@ static void load_elf_program_header() {
       // printf("p_filesz = 0x%08x ", p_filesz);
       // printf("p_memsz = 0x%08x ", p_memsz);
       
-      ramdisk_read((void *)p_vaddr, p_offset, p_filesz);
+      fs_lseek(elf_fd, p_offset, SEEK_SET);
+      fs_read(elf_fd, (void *)p_vaddr, p_filesz);
       if(p_filesz < p_memsz) {
         memset((void *)(p_vaddr + p_filesz), 0, p_memsz - p_filesz);
       }
@@ -95,7 +101,8 @@ static void load_elf_program_header() {
 }
 
 static uintptr_t loader(PCB *pcb, const char *filename) {
-  elf_ehdr_ptr = (Elf_Ehdr *)get_ramdisk_ptr_by_offset(0);
+  elf_fd = fs_open(filename, 0, 0);
+  elf_ehdr_ptr = (Elf_Ehdr *)get_data_from_ramdisk_ptr(0, sizeof(Elf_Ehdr));
   check_elf_mag();
   load_elf_program_header();
   return elf_ehdr_ptr->e_entry;

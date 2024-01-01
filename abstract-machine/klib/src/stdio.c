@@ -6,7 +6,7 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
-#define MAXLINE 1024
+#define MAXLINE 0x1000
 char printf_str[MAXLINE];
 
 int printf(const char *fmt, ...) {
@@ -14,6 +14,7 @@ int printf(const char *fmt, ...) {
   va_start (arg, fmt);
   int done = vsprintf(printf_str, fmt, arg);
   va_end (arg);
+  assert(done <= MAXLINE);
   size_t i = 0;
   char ch;
   while((ch = printf_str[i])){

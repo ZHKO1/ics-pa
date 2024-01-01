@@ -1,5 +1,6 @@
 #include <am.h>
 #include <common.h>
+#include <fs.h>
 #include "syscall.h"
 
 int mm_brk(uintptr_t brk);
@@ -32,17 +33,46 @@ void do_syscall(Context *c) {
       c->GPRx = 0;
       strace_ret("yield", c);
       break;
-    case SYS_write:
-      int fd = c->GPR2;
-      char *buf = (char *)c->GPR3;
-      size_t len = c->GPR4;
-      if ((fd == 1) || (fd == 2)) {
-        for (size_t i = 0; i < len; i++) putch(*(buf + i));
-        c->GPRx = len;
-      } else {
-        panic("Not support fd(%d) in SYS_write", fd);
+    case SYS_open:
+      char *path = (char *)c->GPR2;
+      int flags = c->GPR3;
+      int mode = c->GPR4;
+      c->GPRx = fs_open(path, flags, mode);
+      strace_ret("open", c);
+      break;
+    case SYS_read:
+      {
+        int fd = c->GPR2;
+        char *buf = (char *)c->GPR3;
+        size_t len = c->GPR4;
+        c->GPRx = fs_read(fd, buf, len);
+        strace_ret("read", c);
       }
-      strace_ret("write", c);
+      break;
+    case SYS_write:
+      {
+        int fd = c->GPR2;
+        char *buf = (char *)c->GPR3;
+        size_t len = c->GPR4;
+        c->GPRx = fs_write(fd, buf, len);
+        strace_ret("write", c);
+      }
+      break;
+    case SYS_lseek:
+      {
+        int fd = c->GPR2;
+        size_t offset = c->GPR3;
+        int whence = c->GPR4;
+        c->GPRx = fs_lseek(fd, offset, whence);
+        strace_ret("lseek", c);
+      }
+      break;
+    case SYS_close:
+      {
+        int fd = c->GPR2;
+        c->GPRx = fs_close(fd);
+        strace_ret("close", c);
+      }
       break;
     case SYS_brk:
       uintptr_t program_break = c->GPR2;
