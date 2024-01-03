@@ -1,21 +1,17 @@
 #include <unistd.h>
-#include <sys/time.h>
 #include <stdio.h>
 #include <assert.h>
+#include <NDL.h>
 
 int main()
 {
-  struct timeval tv = {};
-  struct timezone tz = {};
-  int result = gettimeofday(&tv, &tz);
-  uint64_t us = tv.tv_sec * 1000000 + tv.tv_usec;
+  uint32_t us = NDL_GetTicks();
   while (1)
   {
-    result = gettimeofday(&tv, &tz);    
-    assert(result == 0);
-    uint64_t new_us = tv.tv_sec * 1000000 + tv.tv_usec;
-    if(new_us - us >= 500000) {
-      printf("sec = %ds\n", (int)tv.tv_sec);
+    uint32_t new_us = NDL_GetTicks();
+    if (new_us - us >= 500000)
+    {
+      printf("sec = %ds\n", (int)new_us / 1000000);
       us = new_us;
     }
   }
