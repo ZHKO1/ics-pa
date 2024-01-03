@@ -110,6 +110,12 @@ size_t fs_lseek(int fd, size_t offset, int whence) {
   return file->open_offset;
 }
 
+char *fs_get_name_by_fd(int fd) {
+  assert(fd >= 0 && fd < LENGTH(file_table));
+  Finfo *file = &file_table[fd];
+  return file->name;
+}
+
 int fs_close(int fd){
   return 0;
 }

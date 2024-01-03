@@ -3,20 +3,33 @@
 #include <fs.h>
 #include "syscall.h"
 
+#define STRACE(ID, ret) {uintptr_t result = (ret);\
+  strace(SYS_##ID, #ID, c, result); \
+  c->GPRx = result;}
+
 int mm_brk(uintptr_t brk);
 
-static inline void strace(char *system_call_name, Context *c, bool ingnore_ret) {
+static inline void strace(int id, char *system_call_name, Context *c, uintptr_t result) {
 #ifdef CONFIG_ETRACE
-  if (ingnore_ret) {
-    Log("%s (%2d, %2d, %2d, %2d) = ???", system_call_name, c->GPR1, c->GPR2, c->GPR3, c->GPR4 );    
-  } else {
-    Log("%s (%2d, %2d, %2d, %2d) = %2d", system_call_name, c->GPR1, c->GPR2, c->GPR3, c->GPR4, c->GPRx );
+  // TODO 需要考虑64位的情况，可能要新增支持%lx这样的形式
+  switch (id) {
+    case SYS_open:
+      Log("%s (%s, %2d, %2d) = %2d", system_call_name, (char *)(uintptr_t)c->GPR2, c->GPR3, c->GPR4, result );
+      break;
+    case SYS_read:
+    case SYS_write:
+    case SYS_lseek:
+    case SYS_close:
+      Log("%s (%s, %2d, %2d) = %2d", system_call_name, fs_get_name_by_fd(c->GPR2), c->GPR3, c->GPR4, result );
+      break;
+    case SYS_exit:
+      Log("%s (%d, %2d, %2d) = ???", system_call_name, c->GPR2, c->GPR3, c->GPR4 );
+      break;
+    default:
+      Log("%s (%2d, %2d, %2d) = %2d", system_call_name, c->GPR2, c->GPR3, c->GPR4, result );
+      break;
   }
 #endif
-}
-
-static inline void strace_ret(char *system_call_name, Context *c) {
-      strace(system_call_name, c, false);
 }
 
 void do_syscall(Context *c) {
@@ -25,28 +38,25 @@ void do_syscall(Context *c) {
   switch (a[0]) {
     case SYS_exit:
       int exit_status = c->GPR2;
-      strace("exit", c, true);
+      strace(SYS_exit, "exit", c, 0);
       halt(exit_status);
       break;
     case SYS_yield:
       yield();
-      c->GPRx = 0;
-      strace_ret("yield", c);
+      STRACE(yield, 0);
       break;
     case SYS_open:
       char *path = (char *)c->GPR2;
       int flags = c->GPR3;
       int mode = c->GPR4;
-      c->GPRx = fs_open(path, flags, mode);
-      strace_ret("open", c);
+      STRACE(open, fs_open(path, flags, mode));
       break;
     case SYS_read:
       {
         int fd = c->GPR2;
         char *buf = (char *)c->GPR3;
         size_t len = c->GPR4;
-        c->GPRx = fs_read(fd, buf, len);
-        strace_ret("read", c);
+        STRACE(read, fs_read(fd, buf, len));
       }
       break;
     case SYS_write:
@@ -54,8 +64,7 @@ void do_syscall(Context *c) {
         int fd = c->GPR2;
         char *buf = (char *)c->GPR3;
         size_t len = c->GPR4;
-        c->GPRx = fs_write(fd, buf, len);
-        strace_ret("write", c);
+        STRACE(write, fs_write(fd, buf, len));
       }
       break;
     case SYS_lseek:
@@ -63,21 +72,18 @@ void do_syscall(Context *c) {
         int fd = c->GPR2;
         size_t offset = c->GPR3;
         int whence = c->GPR4;
-        c->GPRx = fs_lseek(fd, offset, whence);
-        strace_ret("lseek", c);
+        STRACE(lseek, fs_lseek(fd, offset, whence));
       }
       break;
     case SYS_close:
       {
         int fd = c->GPR2;
-        c->GPRx = fs_close(fd);
-        strace_ret("close", c);
+        STRACE(close, fs_close(fd));
       }
       break;
     case SYS_brk:
       uintptr_t program_break = c->GPR2;
-      c->GPRx = mm_brk(program_break);
-      strace_ret("brk", c);
+      STRACE(brk, mm_brk(program_break));
       break;
     default: panic("Unhandled syscall ID = %d", a[0]);
   }

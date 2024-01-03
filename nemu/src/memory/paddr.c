@@ -30,7 +30,7 @@ paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 static inline void mtrace(char *type, paddr_t addr, int len, word_t data) {
 #ifdef CONFIG_MTRACE
   if(addr - CONFIG_MTRACE_START_ADDRESS <= CONFIG_MTRACE_RANGE){
-    Log("[%s] address = "FMT_PADDR", len = %d, data = "FMT_WORD,type, addr, len, data);
+    Log("[%s] address = "FMT_PADDR", len = %d, data = "FMT_WORD", pc = "FMT_WORD,type, addr, len, data, cpu.pc);
   }
 #endif
 }
