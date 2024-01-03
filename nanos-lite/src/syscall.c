@@ -1,6 +1,7 @@
 #include <am.h>
 #include <common.h>
 #include <fs.h>
+#include <device.h>
 #include "syscall.h"
 
 #define STRACE(ID, ret) {uintptr_t result = (ret);\
@@ -84,6 +85,13 @@ void do_syscall(Context *c) {
     case SYS_brk:
       uintptr_t program_break = c->GPR2;
       STRACE(brk, mm_brk(program_break));
+      break;
+    case SYS_gettimeofday:
+      {
+        struct timeval *tv = (struct timeval *)(uintptr_t)c->GPR2;
+        struct timezone *tz = (struct timezone *)(uintptr_t)c->GPR3;
+        STRACE(gettimeofday, device_gettimeofday(tv, tz));
+      }
       break;
     default: panic("Unhandled syscall ID = %d", a[0]);
   }

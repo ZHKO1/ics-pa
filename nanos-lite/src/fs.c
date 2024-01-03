@@ -1,5 +1,6 @@
 #include <klib-macros.h>
 #include <fs.h>
+#include <device.h>
 #include <common.h>
 
 typedef size_t (*ReadFn) (void *buf, size_t offset, size_t len);
@@ -32,8 +33,8 @@ size_t invalid_write(const void *buf, size_t offset, size_t len) {
 /* This is the information about all files in disk. */
 static Finfo file_table[] __attribute__((used)) = {
   [FD_STDIN]  = {"stdin", 0, 0, invalid_read, invalid_write},
-  [FD_STDOUT] = {"stdout", 0, 0, invalid_read, invalid_write},
-  [FD_STDERR] = {"stderr", 0, 0, invalid_read, invalid_write},
+  [FD_STDOUT] = {"stdout", 0, 0, invalid_read, serial_write},
+  [FD_STDERR] = {"stderr", 0, 0, invalid_read, serial_write},
 #include "files.h"
 };
 
@@ -50,6 +51,11 @@ int fs_open(const char *pathname, int flags, int mode) {
 size_t fs_read(int fd, void *buf, size_t len){
   assert(fd >= 0 && fd < LENGTH(file_table));
   Finfo *file = &file_table[fd];
+  if ( file->read ) {
+    size_t offset = file->read(buf, file->open_offset, len);
+    file->open_offset += offset;
+    return offset;
+  }
   if ( file->open_offset >= file->size ) {
     return 0;
   }
@@ -69,9 +75,10 @@ size_t fs_read(int fd, void *buf, size_t len){
 size_t fs_write(int fd, const void *buf, size_t len) {
   assert(fd >= 0 && fd < LENGTH(file_table));
   Finfo *file = &file_table[fd];
-  if ((fd == 1) || (fd == 2)) {
-    for (size_t i = 0; i < len; i++) putch(*((char *)buf + i));
-    return len;
+  if ( file->write ) {
+    size_t offset = file->write(buf, file->open_offset, len);
+    file->open_offset += offset;
+    return offset;
   }
   if ( file->open_offset >= file->size ) {
     return 0;
