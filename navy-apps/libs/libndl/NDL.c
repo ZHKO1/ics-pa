@@ -9,6 +9,8 @@ static int evtdev = -1;
 static int fbdev = -1;
 static int screen_w = 0, screen_h = 0;
 
+static int fb_events = -1;
+
 uint32_t NDL_GetTicks() {
   struct timeval tv = {};
   struct timezone tz = {};
@@ -17,7 +19,7 @@ uint32_t NDL_GetTicks() {
 }
 
 int NDL_PollEvent(char *buf, int len) {
-  return 0;
+  return read(fb_events, buf, len);
 }
 
 void NDL_OpenCanvas(int *w, int *h) {
@@ -61,8 +63,10 @@ int NDL_Init(uint32_t flags) {
   if (getenv("NWM_APP")) {
     evtdev = 3;
   }
+  fb_events = open( "/dev/events", 0, 0);
   return 0;
 }
 
 void NDL_Quit() {
+  close(fb_events);
 }
