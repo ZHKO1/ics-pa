@@ -343,7 +343,20 @@ int sprintf(char *out, const char *fmt, ...) {
 }
 
 int snprintf(char *out, size_t n, const char *fmt, ...) {
-  panic("Not implemented");
+  char tmp[MAXLINE];
+  
+  va_list arg;
+  int done;
+
+  va_start (arg, fmt);
+  done = vsprintf (tmp, fmt, arg);
+  va_end (arg);
+
+  assert(done + 1 <= MAXLINE);
+
+  strncpy(out, tmp, n);
+  out[n - 1] = '\0';
+  return done;
 }
 
 int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
