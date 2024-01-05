@@ -16,6 +16,8 @@ static const char *keyname[256] __attribute__((used)) = {
   AM_KEYS(NAME)
 };
 
+static int screen_w = 0, screen_h = 0;
+
 size_t serial_write(const void *buf, size_t offset, size_t len) {
   for (size_t i = 0; i < len; i++) putch(*((char *)buf + i));
   return len;
@@ -30,11 +32,18 @@ size_t events_read(void *buf, size_t offset, size_t len) {
 }
 
 size_t dispinfo_read(void *buf, size_t offset, size_t len) {
-  return 0;
+  int w = io_read(AM_GPU_CONFIG).width;
+  int h = io_read(AM_GPU_CONFIG).height;
+  return snprintf(buf, len, "WIDTH:%d\nHEIGHT:%d\n", w, h);
 }
 
 size_t fb_write(const void *buf, size_t offset, size_t len) {
-  return 0;
+  int y = offset / (sizeof(uint32_t) * screen_w);
+  int x = (offset - (screen_w * y * sizeof(uint32_t))) / (sizeof(uint32_t));
+  int w = len / (sizeof(uint32_t));
+  io_write(AM_GPU_FBDRAW, x, y, (void  *)buf, w, 1, false);
+  io_write(AM_GPU_FBDRAW, 0, 0, NULL, 0, 0, true);
+  return len;
 }
 
 int device_gettimeofday(struct timeval *tv, struct timezone *tz) {
@@ -44,7 +53,17 @@ int device_gettimeofday(struct timeval *tv, struct timezone *tz) {
   return 0;
 }
 
+int device_screen_w(){
+  return screen_w;
+}
+
+int device_screen_h(){
+  return screen_h;  
+}
+
 void init_device() {
   Log("Initializing devices...");
   ioe_init();
+  screen_w = io_read(AM_GPU_CONFIG).width;
+  screen_h = io_read(AM_GPU_CONFIG).height;
 }

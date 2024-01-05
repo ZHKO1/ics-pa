@@ -11,7 +11,7 @@
 int mm_brk(uintptr_t brk);
 
 static inline void strace(int id, char *system_call_name, Context *c, uintptr_t result) {
-#ifdef CONFIG_ETRACE
+#ifdef CONFIG_STRACE
   // TODO 需要考虑64位的情况，可能要新增支持%lx这样的形式
   switch (id) {
     case SYS_open:

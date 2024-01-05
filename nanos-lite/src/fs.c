@@ -36,6 +36,8 @@ static Finfo file_table[] __attribute__((used)) = {
   [FD_STDOUT] = {"stdout", 0, 0, invalid_read, serial_write},
   [FD_STDERR] = {"stderr", 0, 0, invalid_read, serial_write},
   {"/dev/events", 0, 0, events_read, invalid_write},
+  {"/dev/fb", 0, 0, invalid_read, fb_write},
+  {"/proc/dispinfo", 0, 0, dispinfo_read, invalid_write},
 #include "files.h"
 };
 
@@ -130,4 +132,8 @@ int fs_close(int fd){
 
 void init_fs() {
   // TODO: initialize the size of /dev/fb
+  int w = device_screen_w();
+  int h = device_screen_h();
+  int fd_fb = fs_open("/dev/fb", 0, 0);
+  file_table[fd_fb].size = w * h * sizeof(uint32_t);
 }

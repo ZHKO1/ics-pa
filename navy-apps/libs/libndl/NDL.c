@@ -3,13 +3,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
 #include <sys/time.h>
+#include <sys/types.h>
+
+#define MAXLINE 1000
 
 static int evtdev = -1;
 static int fbdev = -1;
 static int screen_w = 0, screen_h = 0;
 
-static int fb_events = -1;
+static int fd_events = -1;
+static int fd_dispinfo = -1;
+static int fd_fb = -1;
+
+static int canvas_w = 0;
+static int canvas_h = 0;
 
 uint32_t NDL_GetTicks() {
   struct timeval tv = {};
@@ -19,7 +28,7 @@ uint32_t NDL_GetTicks() {
 }
 
 int NDL_PollEvent(char *buf, int len) {
-  return read(fb_events, buf, len);
+  return read(fd_events, buf, len);
 }
 
 void NDL_OpenCanvas(int *w, int *h) {
@@ -40,9 +49,27 @@ void NDL_OpenCanvas(int *w, int *h) {
     }
     close(fbctl);
   }
+  if((*w == 0) && (*h == 0)) {
+    canvas_w = screen_w;
+    canvas_h = screen_h;
+  } else {
+    canvas_w = *w;
+    canvas_h = *h;
+  }
+  printf("canvas_w = %d, canvas_h = %d\n", canvas_w, canvas_h);
 }
 
 void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
+  assert(w >= 0);
+  assert(h >= 0);
+  assert(w <= canvas_w);
+  assert(h <= canvas_h);
+  for(int j = 0; j < h; j++) {
+    uint32_t *pixel = (uint32_t *)(uintptr_t)pixels + 0 + j * w;
+    long offset = ((0 + x) + (j + y) * screen_w) * sizeof(uint32_t);
+    lseek(fd_fb, offset, SEEK_SET);
+    write(fd_fb, pixel, (sizeof(uint32_t)) * (size_t) w);
+  }
 }
 
 void NDL_OpenAudio(int freq, int channels, int samples) {
@@ -63,10 +90,18 @@ int NDL_Init(uint32_t flags) {
   if (getenv("NWM_APP")) {
     evtdev = 3;
   }
-  fb_events = open( "/dev/events", 0, 0);
+  fd_events = open( "/dev/events", 0, 0);
+  fd_dispinfo = open( "/proc/dispinfo", 0, 0);
+  fd_fb = open( "/dev/fb", 0, 0);
+  char dispinfo_str[MAXLINE] = "";
+  read(fd_dispinfo, dispinfo_str, MAXLINE);
+  sscanf(dispinfo_str, "WIDTH:%d\nHEIGHT:%d", &screen_w, &screen_h);
+  printf("screen_w = %d, screen_h = %d\n", screen_w, screen_h);
   return 0;
 }
 
 void NDL_Quit() {
-  close(fb_events);
+  close(fd_events);
+  close(fd_dispinfo);
+  close(fd_fb);
 }
