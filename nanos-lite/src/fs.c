@@ -45,6 +45,7 @@ int fs_open(const char *pathname, int flags, int mode) {
   for (size_t i = 0; i < LENGTH(file_table); i++) {
     Finfo *file_ptr = &file_table[i];
     if (strcmp(file_ptr->name, pathname)  == 0) {
+      file_table[i].open_offset = 0;
       return i;
     }
   }

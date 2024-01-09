@@ -5,14 +5,22 @@
 #include <stdlib.h>
 
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
+  assert(0);
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
+    assert(0);
 }
 
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
+  if((x == 0) && (y == 0) && (w == 0) && (h == 0)) {
+    w = s->w;
+    h = s->h;
+  }
+  void *pixels = s->pixels;
+  NDL_DrawRect(pixels, x, y, w, h);
 }
 
 // APIs below are already implemented.
