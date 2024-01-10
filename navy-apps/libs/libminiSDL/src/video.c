@@ -5,13 +5,83 @@
 #include <stdlib.h>
 
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
-  assert(0);
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
+  
+  int srcrect_w = src->w;
+  int srcrect_h = src->h;
+  int srcrect_x = 0;
+  int srcrect_y = 0;
+  if (srcrect) {
+    srcrect_w = (int)srcrect->w;
+    srcrect_h = (int)srcrect->h;
+    srcrect_x = srcrect->x;
+    srcrect_y = srcrect->y;
+  }
+  
+  // TODO 是否需要裁剪？
+  assert(srcrect_w >= 0);
+  assert(srcrect_w <= src->w);
+  assert(srcrect_h >= 0);
+  assert(srcrect_h <= src->h);
+
+  int dstrect_x = 0;
+  int dstrect_y = 0;
+  if (dstrect) {
+    dstrect_x = (int)dstrect->x;
+    dstrect_y = (int)dstrect->y;
+  }
+
+  assert(dstrect_x <= dst->w);
+  assert(dstrect_y <= dst->h);
+
+  int dstrect_w_max = dst->w - dstrect_x;
+  int dstrect_h_max = dst->h - dstrect_y;
+
+  int new_dstrect_w = (srcrect_w <= dstrect_w_max) ? srcrect_w : dstrect_w_max;
+  int new_dstrect_h = (srcrect_h <= dstrect_h_max) ? srcrect_h : dstrect_h_max;
+
+  uint32_t *dst_pixels = (uint32_t *)dst->pixels;
+  uint32_t *src_pixels = (uint32_t *)src->pixels;
+
+  for(int j = 0; j < new_dstrect_h; j++) {
+    for(int i = 0; i < new_dstrect_w; i++) {
+      *(dst_pixels + (dstrect_y + j) * (dst->w) + (dstrect_x + i)) = *(src_pixels + (srcrect_x + j) * (src->w) + (srcrect_y + i));
+    }
+  }
+
+  if (dstrect) {
+    dstrect->w = (uint16_t)new_dstrect_w;
+    dstrect->h = (uint16_t)new_dstrect_h;
+  }
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
-    assert(0);
+  if (dstrect == NULL) {
+    int w = dst->w;
+    int h = dst->h;
+    uint32_t *pixels = (uint32_t *)dst->pixels;
+    for(int i = 0; i < w * h; i++) {
+      *(pixels + i) = color;
+    }
+  } else {
+    int w = dstrect->w;
+    int h = dstrect->h;
+    int x = dstrect->x;
+    int y = dstrect->y;
+    assert(w >= 0);
+    assert(w <= dst->w);
+    assert(h >= 0);
+    assert(h <= dst->h);
+    assert(x < dst->w);
+    assert(y < dst->h);
+    uint32_t *pixels = (uint32_t *)dst->pixels;
+    for(int j = 0; j < h; j++) {
+      for(int i = 0; i < w; i++) {
+        *(pixels + (y + j) * (dst->w) + (i + x)) = color;
+      }
+    }
+  }
 }
 
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
