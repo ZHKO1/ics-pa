@@ -38,7 +38,7 @@ int SDL_PollEvent(SDL_Event *ev) {
   char name[10];
   int result = NDL_PollEvent(buf, sizeof(buf));
   if (result) {
-    printf("buf=%s\n", buf);
+    // printf("buf=%s\n", buf);
     sscanf(buf, "%s %s", event, name);
     if(!strcmp(event, "kd") || !strcmp(event, "ku")) {
       SDL_KeyboardEvent_init(ev, event, name);
