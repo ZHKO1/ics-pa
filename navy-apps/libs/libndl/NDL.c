@@ -27,7 +27,7 @@ uint32_t NDL_GetTicks() {
   struct timeval tv = {};
   struct timezone tz = {};
   int result = gettimeofday(&tv, &tz);
-  return tv.tv_sec * 1000000 + tv.tv_usec;;
+  return tv.tv_sec * 1000 + tv.tv_usec/1000;
 }
 
 int NDL_PollEvent(char *buf, int len) {

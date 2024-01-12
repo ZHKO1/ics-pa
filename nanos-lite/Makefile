@@ -36,7 +36,7 @@ ifeq ($(wildcard $(NAVY_HOME)/libs/libos/src/syscall.h),)
 endif
 
 # 引入多个elf // TODO 按理说这里APPS和TESTS应该跟navy-apps/Makefile保持统一，有待优化
-APPS =
+APPS = pal
 TESTS = 
 NAVY_ELF_PATHS = $(foreach elf,$(APPS),$(NAVY_HOME)/apps/$(elf)/build/$(elf)-$(ISA))
 NAVY_ELF_PATHS += $(foreach elf,$(TESTS),$(NAVY_HOME)/tests/$(elf)/build/$(elf)-$(ISA))
