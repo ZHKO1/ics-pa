@@ -1,6 +1,8 @@
 #include <am.h>
 #include <nemu.h>
 #include <klib.h>
+#include <memlib.h>
+#include <mm.h>
 
 extern char _heap_start;
 int main(const char *args);

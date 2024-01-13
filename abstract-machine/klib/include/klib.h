@@ -4,8 +4,6 @@
 #include <am.h>
 #include <stddef.h>
 #include <stdarg.h>
-#include <memlib.h>
-#include <mm.h>
 
 #ifdef __cplusplus
 extern "C" {
