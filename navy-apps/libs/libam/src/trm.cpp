@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-Area heap;
+Area heap = {};
 
 void putch(char ch) {
   putchar(ch);

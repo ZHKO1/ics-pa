@@ -3,6 +3,7 @@
 #include <klib-macros.h>
 #include <NDL.h>
 #include <string.h>
+#include <unistd.h>
 
 #define keyname(k) #k,
 
@@ -104,10 +105,16 @@ static void *lut[128] = {
 
 static void fail(void *buf) { panic("access nonexist register"); }
 
+#define PMEM_SIZE (128 * 1024 * 1024)
+
+
 bool ioe_init() {
   for (int i = 0; i < LENGTH(lut); i++)
     if (!lut[i]) lut[i] = fail;
   NDL_Init(0);
+
+  heap.start = sbrk(0);
+  heap.end = heap.start + PMEM_SIZE; // TODO 这里感觉heap.end的值不够严谨，但也没什么思路，只能先这样处理
   return true;
 }
 
