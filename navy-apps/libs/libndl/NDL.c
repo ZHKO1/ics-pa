@@ -67,7 +67,7 @@ void NDL_OpenCanvas(int *w, int *h) {
   }
   canvas_x = (screen_w - canvas_w) / 2;
   canvas_y = (screen_h - canvas_h) / 2;
-  printf("canvas_w = %d, canvas_h = %d\n", canvas_w, canvas_h);
+  // printf("canvas_w = %d, canvas_h = %d\n", canvas_w, canvas_h);
 }
 
 void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
@@ -107,7 +107,7 @@ int NDL_Init(uint32_t flags) {
   char dispinfo_str[MAXLINE] = "";
   read(fd_dispinfo, dispinfo_str, MAXLINE);
   sscanf(dispinfo_str, "WIDTH:%d\nHEIGHT:%d", &screen_w, &screen_h);
-  printf("screen_w = %d, screen_h = %d\n", screen_w, screen_h);
+  // printf("screen_w = %d, screen_h = %d\n", screen_w, screen_h);
   return 0;
 }
 

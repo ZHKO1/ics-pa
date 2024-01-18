@@ -152,7 +152,7 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
     NDL_DrawRect(ndl_pixels, x, y, w, h);
     free(ndl_pixels);
   } else if(BitsPerPixel == 32) {
-    NDL_DrawRect(pixels, x, y, w, h);
+    NDL_DrawRect((uint32_t *)pixels, x, y, w, h);
   } else {
     assert(0);
   }

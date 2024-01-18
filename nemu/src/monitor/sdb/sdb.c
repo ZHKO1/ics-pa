@@ -20,6 +20,7 @@
 #include "sdb.h"
 
 #include <memory/paddr.h>
+#include <cpu/difftest.h>
 
 static int is_batch_mode = false;
 extern bool is_test_gen_expr_mode;
@@ -148,6 +149,18 @@ static int cmd_d(char *args) {
   return 0;
 }
 
+#ifdef CONFIG_DIFFTEST
+static int cmd_detach(char *args) {
+  difftest_detach();
+  return 0;
+}
+
+static int cmd_attach(char *args) {
+  difftest_attach();
+  return 0;
+}
+#endif
+
 static int cmd_q(char *args) {
   nemu_state.state = NEMU_QUIT;
   return -1;
@@ -168,6 +181,10 @@ static struct {
   { "p", "Print value of expression EXP", cmd_p },
   { "w", "Set a watchpoint for EXPRESSION", cmd_w },
   { "d", "Delete all or some breakpoints", cmd_d },
+#ifdef CONFIG_DIFFTEST
+  { "detach", "Disable Difftest", cmd_detach },
+  { "attach", "Enable Difftest", cmd_attach },
+#endif
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */
@@ -199,8 +216,8 @@ static int cmd_help(char *args) {
   return 0;
 }
 
-void sdb_set_batch_mode() {
-  is_batch_mode = true;
+void sdb_set_batch_mode(bool val) {
+  is_batch_mode = val;
 }
 
 void sdb_mainloop() {

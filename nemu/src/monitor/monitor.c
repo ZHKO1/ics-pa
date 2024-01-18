@@ -40,7 +40,7 @@ static void welcome() {
 #ifndef CONFIG_TARGET_AM
 #include <getopt.h>
 
-void sdb_set_batch_mode();
+void sdb_set_batch_mode(bool val);
 extern void sdb_test_gen_expr_mode();
 
 static char *log_file = NULL;
@@ -85,7 +85,7 @@ static int parse_args(int argc, char *argv[]) {
   int o;
   while ( (o = getopt_long(argc, argv, "-bhge:l:d:p:", table, NULL)) != -1) {
     switch (o) {
-      case 'b': sdb_set_batch_mode(); break;
+      case 'b': sdb_set_batch_mode(true); break;
       case 'g': sdb_test_gen_expr_mode(); break;
       case 'p': sscanf(optarg, "%d", &difftest_port); break;
       case 'l': log_file = optarg; break;
