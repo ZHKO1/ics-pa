@@ -161,6 +161,58 @@ static int cmd_attach(char *args) {
 }
 #endif
 
+static int cmd_save(char *args) {
+  char usage_msg[] = "Usage: save [path]";
+  #define MAX_LEN 2048
+  char path_arg[MAX_LEN] = "";
+  if (!args) {
+    printf("%s\n", usage_msg);
+    return 0;
+  }
+  sscanf(args, "%s", path_arg);
+
+  FILE *fp = fopen(path_arg, "wb");
+  assert(fp);
+  size_t cpu_size = sizeof(CPU_state);
+  int write_size = fwrite(&cpu, 1, cpu_size, fp);
+  assert(write_size == cpu_size);
+  size_t csr_size = sizeof(CPU_csr);
+  write_size = fwrite(&csr, 1, csr_size, fp);
+  assert(write_size == csr_size);
+
+  write_size = fwrite(guest_to_host(RESET_VECTOR), 1, CONFIG_MSIZE, fp);
+  assert(write_size == CONFIG_MSIZE);
+  
+  fclose(fp);
+  return 0;
+}
+
+static int cmd_load(char *args) {
+  char usage_msg[] = "Usage: load [path]";
+  #define MAX_LEN 2048
+  char path_arg[MAX_LEN] = "";
+  if (!args) {
+    printf("%s\n", usage_msg);
+    return 0;
+  }
+  sscanf(args, "%s", path_arg);
+
+  FILE *fp = fopen(path_arg, "rb");
+  assert(fp);
+  size_t cpu_size = sizeof(CPU_state);
+  int read_size = fread(&cpu, 1, cpu_size, fp);
+  assert(read_size == cpu_size);
+  size_t csr_size = sizeof(CPU_csr);
+  read_size = fread(&csr, 1, csr_size, fp);
+  assert(read_size == csr_size);
+
+  read_size = fread(guest_to_host(RESET_VECTOR), 1, CONFIG_MSIZE, fp);
+  assert(read_size == CONFIG_MSIZE);
+  
+  fclose(fp);
+  return 0;
+}
+
 static int cmd_q(char *args) {
   nemu_state.state = NEMU_QUIT;
   return -1;
@@ -185,6 +237,8 @@ static struct {
   { "detach", "Disable Difftest", cmd_detach },
   { "attach", "Enable Difftest", cmd_attach },
 #endif
+  { "save", "Save Status", cmd_save },
+  { "load", "Load Status", cmd_load },
   { "q", "Exit NEMU", cmd_q },
 
   /* TODO: Add more commands */

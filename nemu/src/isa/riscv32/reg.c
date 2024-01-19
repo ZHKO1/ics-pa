@@ -48,24 +48,19 @@ word_t isa_reg_str2val(const char *s, bool *success) {
   return 0;
 }
 
-static word_t mstatus = MUXDEF(CONFIG_DIFFTEST, 0x1800, 0);
-static word_t mtvec = 0;
-static word_t mepc = 0;
-static word_t mcause = 0;
-
 word_t get_csr(word_t key) {
   switch (key) {
     case CSR_MSTATUS:
-      return mstatus;
+      return csr.mstatus;
       break;
     case CSR_MTVEC:
-      return mtvec;
+      return csr.mtvec;
       break;
     case CSR_MEPC:
-      return mepc;
+      return csr.mepc;
       break;
     case CSR_MCAUSE:
-      return mcause;
+      return csr.mcause;
       break;    
     default:
       panic("CSR GET: Unkown  reg(key="FMT_WORD")", key);
@@ -76,17 +71,17 @@ word_t get_csr(word_t key) {
 void set_csr(word_t key, word_t value) {
   switch (key) {
     case CSR_MSTATUS:
-      mstatus = value;
+      csr.mstatus = value;
       break;
     case CSR_MTVEC:
-      mtvec = value;
+      csr.mtvec = value;
       break;
     case CSR_MEPC:
-      mepc = value;
+      csr.mepc = value;
       break;
     case CSR_MCAUSE:
-      mcause = value;
-      break;    
+      csr.mcause = value;
+      break;
     default:
       panic("CSR SET: Unkown  reg(key="FMT_WORD")", key);
       break;
