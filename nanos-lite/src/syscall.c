@@ -104,6 +104,24 @@ void do_syscall(Context *c) {
     case SYS_execve:
       {
         char* pathname = (char*)c->GPR2;
+        /*
+        char**argv = (char**)(void *)(uintptr_t)c->GPR3;
+        int i = 0;
+        if(argv){
+          while(*(argv + i)){
+            printf("arg%d=%s\n", i, *(argv + i));
+            i++;
+          }
+        }
+        char**envp = (char**)(void *)(uintptr_t)c->GPR4;
+        i = 0;
+        if(envp){
+          while(*(envp + i)){
+            printf("envp%d=%s\n", i, *(envp + i));
+            i++;
+          }
+        }
+        */
         strace(SYS_execve, "execve", c, 0);
         naive_uload(NULL, pathname);
       }
