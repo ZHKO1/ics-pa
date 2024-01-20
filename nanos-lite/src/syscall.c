@@ -4,11 +4,14 @@
 #include <device.h>
 #include "syscall.h"
 
+#include <proc.h>
+
 #define STRACE(ID, ret) {uintptr_t result = (ret);\
   strace(SYS_##ID, #ID, c, result); \
   c->GPRx = result;}
 
 int mm_brk(uintptr_t brk);
+void naive_uload(PCB *pcb, const char *filename);
 
 static inline void strace(int id, char *system_call_name, Context *c, uintptr_t result) {
 #ifdef CONFIG_STRACE
@@ -26,6 +29,9 @@ static inline void strace(int id, char *system_call_name, Context *c, uintptr_t 
     case SYS_exit:
       Log("%s (%d, %2d, %2d) = ???", system_call_name, c->GPR2, c->GPR3, c->GPR4 );
       break;
+    case SYS_execve:
+      Log("%s (%s, %2d, %2d) = ???", system_call_name, (char *)(uintptr_t)c->GPR2, c->GPR3, c->GPR4 );
+      break;
     default:
       Log("%s (%2d, %2d, %2d) = %2d", system_call_name, c->GPR2, c->GPR3, c->GPR4, result );
       break;
@@ -38,9 +44,11 @@ void do_syscall(Context *c) {
   a[0] = c->GPR1;
   switch (a[0]) {
     case SYS_exit:
-      int exit_status = c->GPR2;
-      strace(SYS_exit, "exit", c, 0);
-      halt(exit_status);
+      {
+        // int exit_status = c->GPR2;
+        strace(SYS_exit, "exit", c, 0);
+        naive_uload(NULL, "/bin/menu");
+      }
       break;
     case SYS_yield:
       yield();
@@ -91,6 +99,13 @@ void do_syscall(Context *c) {
         struct timeval *tv = (struct timeval *)(uintptr_t)c->GPR2;
         struct timezone *tz = (struct timezone *)(uintptr_t)c->GPR3;
         STRACE(gettimeofday, device_gettimeofday(tv, tz));
+      }
+      break;
+    case SYS_execve:
+      {
+        char* pathname = (char*)c->GPR2;
+        strace(SYS_execve, "execve", c, 0);
+        naive_uload(NULL, pathname);
       }
       break;
     default: panic("Unhandled syscall ID = %d", a[0]);

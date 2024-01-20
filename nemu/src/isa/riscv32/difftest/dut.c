@@ -80,9 +80,11 @@ static uint32_t csrrw_inst(size_t reg, word_t val, uint32_t rs1, CPU_state *cpu_
 }
 
 static void disassemble_log(uint8_t *ptr) {
+#ifdef CONFIG_ITRACE
   printf("%x: ", *(uint32_t *)ptr);
   char disassemble_str[1000] = "";
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
   disassemble(disassemble_str, 1000, RESET_VECTOR, ptr, 4);
   printf("%s\n", disassemble_str);
+#endif
 }
