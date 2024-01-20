@@ -210,6 +210,10 @@ static int cmd_load(char *args) {
   assert(read_size == CONFIG_MSIZE);
   
   fclose(fp);
+
+#ifdef CONFIG_DIFFTEST
+  cmd_attach(NULL);
+#endif
   return 0;
 }
 
