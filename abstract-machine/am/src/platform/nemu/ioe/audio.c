@@ -39,9 +39,10 @@ void __am_audio_status(AM_AUDIO_STATUS_T *stat) {
 
 void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
   uint32_t rest_bufsize = 0;
-  uint32_t ready_write_bufsize = 0;
+  uint32_t ready_write_bufsize = (uintptr_t)(ctl->buf.end) - (uintptr_t)(ctl->buf.start);
   uint32_t right = 0;
   uint32_t left = 0;
+  assert(ready_write_bufsize <= bufsize);
   do {
     right = inl(AUDIO_SBUF_RIGHT_ADDR);
     left = inl(AUDIO_SBUF_LEFT_ADDR);
@@ -49,7 +50,6 @@ void __am_audio_play(AM_AUDIO_PLAY_T *ctl) {
     
     // 检查缓冲区剩下的空间是否放得下
     rest_bufsize = bufsize - (right - left);
-    ready_write_bufsize = (uintptr_t)(ctl->buf.end) - (uintptr_t)(ctl->buf.start);
     if (rest_bufsize < ready_write_bufsize) {
       printf("Not enough space in the sbuf, waiting for SDL library to read.[rest_bufsize = 0x%x ready_write_bufsize = 0x%x]\n", rest_bufsize, ready_write_bufsize);
     }

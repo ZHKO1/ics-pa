@@ -23,6 +23,9 @@ static int canvas_h = 0;
 static int canvas_x = 0;
 static int canvas_y = 0;
 
+static int fd_sb = -1;
+static int fd_sbctl = -1;
+
 uint32_t NDL_GetTicks() {
   struct timeval tv = {};
   struct timezone tz = {};
@@ -84,30 +87,44 @@ void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
 }
 
 void NDL_OpenAudio(int freq, int channels, int samples) {
+  int open_audio_config[] = {freq, channels, samples};
+  write(fd_sbctl, open_audio_config, sizeof(open_audio_config));
 }
 
 void NDL_CloseAudio() {
+  // TODO 这里是否只需要保持空函数就可以
 }
 
 int NDL_PlayAudio(void *buf, int len) {
-  return 0;
+  size_t write_count = write(fd_sb, buf, len);
+  // TODO 文档对返回的描述是 “成功播放的音频数据的字节数”
+  // 猜测这个返回值可能是为了应付len大于缓冲区大小的场景
+  return write_count;
 }
 
 int NDL_QueryAudio() {
-  return 0;
+  char str[100] = "";
+  read(fd_sbctl, &str, 100);
+  int free = 0;
+  sscanf(str, "%d", &free);
+  return free;
 }
 
 int NDL_Init(uint32_t flags) {
   if (getenv("NWM_APP")) {
     evtdev = 3;
   }
-  fd_events = open( "/dev/events", 0, 0);
-  fd_dispinfo = open( "/proc/dispinfo", 0, 0);
-  fd_fb = open( "/dev/fb", 0, 0);
+  fd_events = open("/dev/events", 0, 0);
+  fd_dispinfo = open("/proc/dispinfo", 0, 0);
+  fd_fb = open("/dev/fb", 0, 0);
   char dispinfo_str[MAXLINE] = "";
   read(fd_dispinfo, dispinfo_str, MAXLINE);
   sscanf(dispinfo_str, "WIDTH:%d\nHEIGHT:%d", &screen_w, &screen_h);
   // printf("screen_w = %d, screen_h = %d\n", screen_w, screen_h);
+
+  fd_sb = open("/dev/sb", 0, 0);
+  fd_sbctl = open("/dev/sbctl", 0, 0);
+
   return 0;
 }
 

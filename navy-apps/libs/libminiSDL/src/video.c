@@ -1,5 +1,6 @@
 #include <NDL.h>
 #include <sdl-video.h>
+#include <sdl-audio.h>
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
@@ -119,6 +120,8 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
 }
 
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
+  CallbackHelper();
+  
   uint8_t BitsPerPixel = s->format->BitsPerPixel;
   uint8_t BytesPerPixel = s->format->BytesPerPixel;
   assert(BitsPerPixel == 8 || BitsPerPixel == 32);

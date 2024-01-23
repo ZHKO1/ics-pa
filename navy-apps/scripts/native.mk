@@ -1,5 +1,5 @@
 LD = $(CXX)
-
+CFLAGS += -Og -ggdb3
 ### Run an application with $(ISA)=native
 
 env:
