@@ -62,7 +62,7 @@ size_t sbctl_read(const void *buf, size_t offset, size_t len) {
   // assert(offset == 0);
   int count = io_read(AM_AUDIO_STATUS).count;
   int free = sb_size - count;
-  return snprintf(buf, len, "%d\n", free);
+  return snprintf((char *)buf, len, "%d\n", free);
 }
 
 size_t sbctl_write(const void *buf, size_t offset, size_t len) {

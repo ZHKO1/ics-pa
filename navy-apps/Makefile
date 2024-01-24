@@ -51,6 +51,7 @@ LIBS += libc libos
 CFLAGS += -U_FORTIFY_SOURCE  # fix compile error in Newlib on ubuntu
 else
 WL = -Wl,
+CFLAGS += -Og -ggdb3
 endif
 
 ### 32-bit ISA may need compiler-rt to support 64-bit mul/div
@@ -78,6 +79,7 @@ CC        = $(CROSS_COMPILE)gcc
 CXX       = $(CROSS_COMPILE)g++
 LD        = $(CROSS_COMPILE)ld
 OBJDUMP   = $(CROSS_COMPILE)objdump
+READELF   = $(CROSS_COMPILE)readelf
 
 ### Compilation flags
 INC_PATH += $(WORK_DIR)/include $(foreach l,$(LIBS_INC),$(NAVY_HOME)/libs/$(l)/include/)
@@ -142,7 +144,8 @@ endif
 
 ### Build order control
 app: $(APP)
-	@$(OBJDUMP) -d $(APP) > $(APP).txt
+	@$(OBJDUMP) -D $(APP) > $(APP).txt
+	@$(READELF) -a $(APP) > $(APP).readelf
 archive: $(ARCHIVE)
 .PHONY: app archive libs
 
