@@ -6,6 +6,7 @@
 static SDL_AudioSpec config = {};
 static bool audio_init = false;
 static bool is_pause = false;
+static bool is_callbackhelper_called = false;
 static uint32_t pre_ms = 0;
 
 int SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained) {
@@ -18,9 +19,14 @@ int SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained) {
 }
 
 void CallbackHelper() {
-  if(!audio_init) {
+  if (!audio_init) {
     return;
   }
+  if (is_callbackhelper_called) {
+    // 可能用户在config.callback里又调用了api，导致再次调用CallbackHelper，所以这里检查当前的函数调用是否属于重入
+    return;
+  }
+  is_callbackhelper_called = true;
   uint32_t ms = config.samples * 1000 / config.freq;
   uint32_t current_ms = NDL_GetTicks();
   if (current_ms - pre_ms >= ms) {
@@ -52,6 +58,7 @@ void CallbackHelper() {
     free(audio_buf);
     pre_ms = current_ms;
   }
+  is_callbackhelper_called = false;
 }
 
 void SDL_CloseAudio() {
