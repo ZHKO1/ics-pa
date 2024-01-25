@@ -30,6 +30,11 @@ void isa_reg_display() {
     // printf("%-15s0x%-13x\n", reg_name(i), gpr(i));
     printf("%-15s" FMT_REG_DISPLAY "\n", reg_name(i), gpr(i));
   }
+  printf("CSR:\n");
+  printf("%-15s" FMT_REG_DISPLAY "\n", "mcause", csr.mcause);
+  printf("%-15s" FMT_REG_DISPLAY "\n", "mstatus", csr.mstatus);
+  printf("%-15s" FMT_REG_DISPLAY "\n", "mtvec", csr.mtvec);
+  printf("%-15s" FMT_REG_DISPLAY "\n", "mepc", csr.mepc);
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
