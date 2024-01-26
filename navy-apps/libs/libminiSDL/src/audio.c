@@ -12,10 +12,10 @@ static bool is_callbackhelper_called = false;
 static uint32_t pre_ms = 0;
 
 int SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained) {
-  assert(obtained == NULL);
   assert(desired->format == AUDIO_S16SYS);
   memcpy(&config, desired, sizeof(SDL_AudioSpec));
   NDL_OpenAudio(config.freq, config.channels, config.samples);
+  // printf("MiniSDL SDL_OpenAudio freq=%d channels=%d samples=%d\n", config.freq, config.channels, config.samples);
   audio_init = true;
   return 0;
 }
@@ -30,9 +30,11 @@ void CallbackHelper() {
   }
   is_callbackhelper_called = true;
   uint32_t ms = config.samples * 1000 / config.freq;
+  // printf("MiniSDL CallbackHelper 间隔%dms\n", ms);
   uint32_t current_ms = NDL_GetTicks();
-  if (current_ms - pre_ms >= ms) {
-    // printf("MiniSDL CallbackHelper 离上一次CallbackHelper过了%dms\n", current_ms - pre_ms);
+  // printf("MiniSDL CallbackHelper 离上一次CallbackHelper过了%dms current_ms=%d pre_ms=%d\n", current_ms - pre_ms, current_ms, pre_ms);
+  // 因为可能采样率过高，导致比刷新屏幕的频率还高，这里一个思路是在容许范围内比如20ms就算满足条件
+  if ((abs((int)(current_ms - pre_ms - ms)) <= 20) || (current_ms - pre_ms >= ms)) {
     uint32_t sample_size = 0;
     switch (config.format) {
       case AUDIO_S16SYS:
@@ -48,7 +50,7 @@ void CallbackHelper() {
       // printf("MiniSDL CallbackHelper 目前缓冲区已满，继续等待...\n");
       free_size = NDL_QueryAudio();
     }
-    uint32_t size = free_size < samples_size ? free_size : samples_size;
+    uint32_t size = (free_size < samples_size) ? free_size : samples_size;
     uint8_t *audio_buf = malloc(size);
     if (!is_pause) {
       // printf("MiniSDL CallbackHelper 准备读取音乐数据，缓冲区还剩下%d字节\n", free_size);

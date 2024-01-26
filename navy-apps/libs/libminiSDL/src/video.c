@@ -6,6 +6,8 @@
 #include <stdlib.h>
 
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
+  CallbackHelper();
+
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
 
@@ -72,6 +74,8 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
+  CallbackHelper();
+
   uint8_t BitsPerPixel = dst->format->BitsPerPixel;
   uint8_t BytesPerPixel = dst->format->BytesPerPixel;
   assert(BitsPerPixel == 8 || BitsPerPixel == 32);
@@ -243,6 +247,8 @@ SDL_Surface* SDL_SetVideoMode(int width, int height, int bpp, uint32_t flags) {
 }
 
 void SDL_SoftStretch(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
+  CallbackHelper();
+
   assert(src && dst);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
   assert(dst->format->BitsPerPixel == 8);
@@ -317,6 +323,8 @@ static void ConvertPixelsARGB_ABGR(void *dst, void *src, int len) {
 }
 
 SDL_Surface *SDL_ConvertSurface(SDL_Surface *src, SDL_PixelFormat *fmt, uint32_t flags) {
+  CallbackHelper();
+
   assert(src->format->BitsPerPixel == 32);
   assert(src->w * src->format->BytesPerPixel == src->pitch);
   assert(src->format->BitsPerPixel == fmt->BitsPerPixel);
