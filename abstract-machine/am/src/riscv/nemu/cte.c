@@ -42,7 +42,18 @@ bool cte_init(Context*(*handler)(Event, Context*)) {
 }
 
 Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
-  return NULL;
+  size_t context_size = sizeof(Context);
+  void *kstack_start = kstack.start;
+  void *kstack_end = kstack.end;
+  memset(kstack_start, 0, (uintptr_t)kstack_end - (uintptr_t)kstack_start);
+  Context *context = (Context *)((uintptr_t)kstack_end - context_size);
+  // 设置上下文的sp寄存器
+  context->gpr[2] = (uintptr_t)context;
+  // 上下文的a1寄存器保存参数arg
+  context->gpr[10] = (uintptr_t)arg;
+  context->mepc = (uintptr_t)entry;
+  *(Context **)kstack_start = context;
+  return context;
 }
 
 void yield() {
