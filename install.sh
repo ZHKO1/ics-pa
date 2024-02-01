@@ -20,4 +20,6 @@ apt-get install -y openssh-server
 
 apt-get install -y device-tree-compiler
 
+apt-get install -y scons
+
 echo "Install is complete."
