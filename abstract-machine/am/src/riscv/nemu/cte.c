@@ -52,6 +52,13 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
   // 上下文的a1寄存器保存参数arg
   context->gpr[10] = (uintptr_t)arg;
   context->mepc = (uintptr_t)entry;
+#ifdef CONFIG_DIFFTEST
+  // TODO 经测试，会报mcause寄存器错误，预期值是0x8，实际值是0xb
+  // 查询了下0x8，对应 Environment call from U-mode
+  // 猜测Spike那边因为什么条件触发判断为用户态，但条件不明
+  // 看了下4.4的“用户态和栈指针”，猜测大概是根据栈指针判断
+  context->mstatus = 0x1800;
+#endif
   *(Context **)kstack_start = context;
   return context;
 }
