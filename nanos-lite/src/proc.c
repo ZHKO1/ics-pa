@@ -12,16 +12,30 @@ void switch_boot_pcb() {
   current = &pcb_boot;
 }
 
+void context_kload (PCB *cur_pcb, void(*fun)(void *), void *args) {
+  Context *context = kcontext((Area) { cur_pcb->stack, (uint8_t *)(&cur_pcb->stack) + STACK_SIZE }, fun, args);
+  cur_pcb->cp = context;
+}
+
 void hello_fun(void *arg) {
   int j = 1;
   while (1) {
     Log("Hello World from Nanos-lite with arg '%p' for the %dth time!", (uintptr_t)arg, j);
     j ++;
+    for (int volatile i = 0; i < 1000000; i++) ;
     yield();
   }
 }
 
 void init_proc() {
+  /*
+  // 测试hello_fun专用
+  context_kload(&pcb[0], hello_fun, (void *)0x1111);
+  context_kload(&pcb[1], hello_fun, (void *)0x2222);
+  switch_boot_pcb();
+  return;
+  */
+
   switch_boot_pcb();
 
   Log("Initializing processes...");
@@ -31,5 +45,7 @@ void init_proc() {
 }
 
 Context* schedule(Context *prev) {
-  return NULL;
+  current->cp = prev;
+  current = (current == &pcb[0] ? &pcb[1] : &pcb[0]);
+  return current->cp;
 }
