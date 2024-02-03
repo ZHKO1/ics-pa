@@ -18,4 +18,6 @@ typedef union {
 
 extern PCB *current;
 
+uintptr_t core_loader (const char *filename);
+
 #endif

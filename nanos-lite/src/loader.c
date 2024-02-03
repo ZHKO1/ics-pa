@@ -100,12 +100,16 @@ static void load_elf_program_header() {
   }
 }
 
-static uintptr_t loader(PCB *pcb, const char *filename) {
+uintptr_t core_loader (const char *filename) {
   elf_fd = fs_open(filename, 0, 0);
   elf_ehdr_ptr = (Elf_Ehdr *)get_data_from_ramdisk_ptr(0, sizeof(Elf_Ehdr));
   check_elf_mag();
   load_elf_program_header();
   return elf_ehdr_ptr->e_entry;
+}
+
+static uintptr_t loader(PCB *pcb, const char *filename) {
+  return core_loader(filename);
 }
 
 void naive_uload(PCB *pcb, const char *filename) {

@@ -70,5 +70,17 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {
 }
 
 Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
-  return NULL;
+  size_t context_size = sizeof(Context);
+  void *kstack_start = kstack.start;
+  void *kstack_end = kstack.end;
+  memset(kstack_start, 0, (uintptr_t)kstack_end - (uintptr_t)kstack_start);
+  Context *context = (Context *)((uintptr_t)kstack_end - context_size);
+  // 设置上下文的sp寄存器
+  // TODO 这里sp寄存器应该要考虑换成抽象层写法
+  context->gpr[2] = (uintptr_t)context;
+  context->mepc = (uintptr_t)entry;
+#ifdef CONFIG_DIFFTEST
+  context->mstatus = 0x1800;
+#endif
+  return context;
 }

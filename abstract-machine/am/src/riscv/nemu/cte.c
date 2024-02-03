@@ -48,6 +48,7 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
   memset(kstack_start, 0, (uintptr_t)kstack_end - (uintptr_t)kstack_start);
   Context *context = (Context *)((uintptr_t)kstack_end - context_size);
   // 设置上下文的sp寄存器
+  // TODO 这里sp寄存器应该要考虑换成抽象层写法
   context->gpr[2] = (uintptr_t)context;
   // 上下文的a1寄存器保存参数arg
   context->gpr[10] = (uintptr_t)arg;
@@ -59,7 +60,6 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
   // 看了下4.4的“用户态和栈指针”，猜测大概是根据栈指针判断
   context->mstatus = 0x1800;
 #endif
-  *(Context **)kstack_start = context;
   return context;
 }
 
