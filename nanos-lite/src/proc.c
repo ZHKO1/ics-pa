@@ -17,10 +17,11 @@ void context_kload (PCB *cur_pcb, void(*fun)(void *), void *args) {
   cur_pcb->cp = context;
 }
 
-void context_uload (PCB *cur_pcb, const char *filename) {
+void context_uload(PCB *cur_pcb, const char *filename, char *const argv[], char *const envp[]) {
   uintptr_t entry = core_loader(filename);
   Context *context = ucontext(NULL, (Area) { cur_pcb->stack, (uint8_t *)(&cur_pcb->stack) + STACK_SIZE }, (void *)entry);
-  context->GPRx = (uintptr_t)heap.end;
+
+  context->GPRx = (uintptr_t)argv;
   cur_pcb->cp = context;
 }
 
@@ -35,13 +36,28 @@ void hello_fun(void *arg) {
 }
 
 void init_proc() {
-  /*
   // 测试hello_fun专用
   context_kload(&pcb[0], hello_fun, (void *)0x1111);
-  context_uload(&pcb[1], "/bin/pal");
+
+  // 尝试给PAL传递参数
+  uintptr_t *area_end_ = (uintptr_t *)heap.end;
+  uintptr_t *area_start_ = area_end_ - 20;
+  // string area
+  char *strptr = (char*)(area_start_ + 10);
+  strcpy(strptr, "/bin/pal");
+  strcpy(strptr + 10, "--skip");
+  // argc
+  *area_start_ = 2;
+  // argv
+  *(area_start_ + 1) = (uintptr_t)strptr;
+  *(area_start_ + 2) = (uintptr_t)(strptr + 10);
+  *(area_start_ + 3) = 0;
+  // envp
+  *(area_start_ + 4) = 0;
+
+  context_uload(&pcb[1], "/bin/pal", (char * const*)area_start_, (char * const*)(area_start_ + 4));
   switch_boot_pcb();
   return;
-  */
 
   switch_boot_pcb();
 
