@@ -105,10 +105,10 @@ void do_syscall(Context *c) {
       {
         char* pathname = (char*)c->GPR2;
         char**argv = (char**)(uintptr_t)c->GPR3;
-        // char**envp = (char**)(uintptr_t)c->GPR4;
+        char**envp = (char**)(uintptr_t)c->GPR4;
         strace(SYS_execve, "execve", c, 0);
         PCB *pcb_ptr = get_current_pcb();
-        context_uload(pcb_ptr, pathname, argv, NULL);
+        context_uload(pcb_ptr, pathname, argv, envp);
         switch_boot_pcb();
         yield();
         // naive_uload(NULL, pathname);

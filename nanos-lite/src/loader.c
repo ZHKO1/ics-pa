@@ -126,9 +126,6 @@ void context_kload (PCB *cur_pcb, void(*fun)(void *), void *args) {
 }
 
 void context_uload(PCB *cur_pcb, const char *filename, char *const argv[], char *const envp[]) {
-  uintptr_t entry = core_loader(filename);
-  Context *context = ucontext(NULL, (Area) { cur_pcb->stack, (uint8_t *)(&cur_pcb->stack) + STACK_SIZE }, (void *)entry);
-
   size_t nr_page = 8;
   uintptr_t *stack_start = (uintptr_t *)new_page(nr_page);
   assert(stack_start);
@@ -164,6 +161,9 @@ void context_uload(PCB *cur_pcb, const char *filename, char *const argv[], char 
   
   uintptr_t *stack_argc = (uintptr_t *)stack_argv - 1;
   *stack_argc = argv_size;
+
+  uintptr_t entry = core_loader(filename);
+  Context *context = ucontext(NULL, (Area) { cur_pcb->stack, (uint8_t *)(&cur_pcb->stack) + STACK_SIZE }, (void *)entry);
 
   context->GPRx = (uintptr_t)stack_argc;
   cur_pcb->cp = context;
