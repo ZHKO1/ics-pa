@@ -34,21 +34,17 @@ void init_proc() {
   context_uload(&pcb[1], "/bin/pal", agv, NULL);
   */
 
-  char user_program_path[50] = "/bin/exec-test";
+  char user_program_path[50] = "/bin/menu";
   char *argv[] = {
     user_program_path,
     NULL
   };
   context_uload(&pcb[1], user_program_path, argv, NULL);
   switch_boot_pcb();
-  return;
-
-  switch_boot_pcb();
-
   Log("Initializing processes...");
 
   // load program here
-  naive_uload(NULL, "/bin/menu");
+  // naive_uload(NULL, "/bin/menu");
 }
 
 Context* schedule(Context *prev) {

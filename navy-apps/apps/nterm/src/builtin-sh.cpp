@@ -24,10 +24,34 @@ static void sh_prompt() {
 }
 
 static void sh_handle_cmd(const char *cmd) {
-  char path[1000] = "";
-  sscanf(cmd, "%s\n", path);
+  size_t length = strlen(cmd);
+  assert(length < 1000);
+  
+  char cmd_temp[1000] = "";
+  strcpy(cmd_temp, cmd);
+  char *cmd_c = cmd_temp;
+  while (*cmd_c) {
+    if(*cmd_c == '\n'){
+      *cmd_c = ' ';
+    }
+    cmd_c++;
+  }
+
+  char *argv[100] = {NULL};
+  const char s[2] = " ";
+
+  char *token;
+  size_t token_index = 0;
+  token = strtok(cmd_temp, s);
+  while( token != NULL ) {
+    argv[token_index] = token;
+    assert(token_index < 100);
+    token = strtok(NULL, s);
+    token_index++;
+  }
+
   setenv("PATH", "/bin", 0);
-  execvp(path, NULL);
+  execvp(argv[0], argv);
 }
 
 void builtin_sh_run() {
