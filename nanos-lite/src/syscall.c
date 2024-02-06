@@ -104,26 +104,14 @@ void do_syscall(Context *c) {
     case SYS_execve:
       {
         char* pathname = (char*)c->GPR2;
-        /*
-        char**argv = (char**)(void *)(uintptr_t)c->GPR3;
-        int i = 0;
-        if(argv){
-          while(*(argv + i)){
-            printf("arg%d=%s\n", i, *(argv + i));
-            i++;
-          }
-        }
-        char**envp = (char**)(void *)(uintptr_t)c->GPR4;
-        i = 0;
-        if(envp){
-          while(*(envp + i)){
-            printf("envp%d=%s\n", i, *(envp + i));
-            i++;
-          }
-        }
-        */
+        char**argv = (char**)(uintptr_t)c->GPR3;
+        char**envp = (char**)(uintptr_t)c->GPR4;
         strace(SYS_execve, "execve", c, 0);
-        naive_uload(NULL, pathname);
+        PCB *pcb_ptr = get_current_pcb();
+        context_uload(pcb_ptr, pathname, argv, envp);
+        switch_boot_pcb();
+        yield();
+        // naive_uload(NULL, pathname);
       }
       break;
     default: panic("Unhandled syscall ID = %d", a[0]);

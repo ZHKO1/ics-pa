@@ -26,6 +26,8 @@
 # error Unsupported ISA
 #endif
 
+static size_t get_argv_len(char *argv[]);
+
 static int elf_fd = 0;
 static Elf_Ehdr *elf_ehdr_ptr = NULL;
 static Elf_Phdr *elf_phdrs_ptr = NULL;
@@ -100,7 +102,7 @@ static void load_elf_program_header() {
   }
 }
 
-uintptr_t core_loader (const char *filename) {
+static uintptr_t core_loader (const char *filename) {
   elf_fd = fs_open(filename, 0, 0);
   elf_ehdr_ptr = (Elf_Ehdr *)get_data_from_ramdisk_ptr(0, sizeof(Elf_Ehdr));
   check_elf_mag();
@@ -118,3 +120,63 @@ void naive_uload(PCB *pcb, const char *filename) {
   ((void(*)())entry) ();
 }
 
+void context_kload (PCB *cur_pcb, void(*fun)(void *), void *args) {
+  Context *context = kcontext((Area) { cur_pcb->stack, (uint8_t *)(&cur_pcb->stack) + STACK_SIZE }, fun, args);
+  cur_pcb->cp = context;
+}
+
+void context_uload(PCB *cur_pcb, const char *filename, char *const argv[], char *const envp[]) {
+  uintptr_t entry = core_loader(filename);
+  Context *context = ucontext(NULL, (Area) { cur_pcb->stack, (uint8_t *)(&cur_pcb->stack) + STACK_SIZE }, (void *)entry);
+
+  size_t nr_page = 8;
+  uintptr_t *stack_start = (uintptr_t *)new_page(nr_page);
+  assert(stack_start);
+  uintptr_t *stack_end = (uintptr_t *)((uintptr_t)stack_start + (nr_page << 12));
+  
+  // 用户栈 给string_area分配1024字节的容量
+  char *stack_string_area = (char *)stack_end - (1 << 10);
+  char *stack_string_area_curptr = stack_string_area;
+  // 用户栈 分配envp，并且更新string_area
+  size_t envp_size = get_argv_len((char **)envp);
+  char **stack_envp = (char **)stack_string_area - (envp_size + 1);
+  char **stack_cur_envp = stack_envp;
+  for (size_t i = 0; i < envp_size; i++) {
+    strcpy(stack_string_area_curptr, envp[i]);
+    *stack_cur_envp = stack_string_area_curptr;
+    stack_string_area_curptr = stack_string_area_curptr + strlen(envp[i]) + 1;
+    assert(stack_string_area_curptr < (char *)stack_end);
+    stack_cur_envp = stack_cur_envp + 1;
+  }
+  *stack_cur_envp = NULL;
+  // 用户栈 分配argv，并且更新string_area
+  size_t argv_size = get_argv_len((char **)argv);
+  char **stack_argv = (char **)stack_envp - (argv_size + 1);
+  char **stack_cur_argv = stack_argv;
+  for (size_t i = 0; i < argv_size; i++) {
+    strcpy(stack_string_area_curptr, argv[i]);
+    *stack_cur_argv = stack_string_area_curptr;
+    stack_string_area_curptr = stack_string_area_curptr + strlen(argv[i]) + 1;
+    assert(stack_string_area_curptr < (char *)stack_end);
+    stack_cur_argv = stack_cur_argv + 1;
+  }
+  *stack_cur_argv = NULL;
+  
+  uintptr_t *stack_argc = (uintptr_t *)stack_argv - 1;
+  *stack_argc = argv_size;
+
+  context->GPRx = (uintptr_t)stack_argc;
+  cur_pcb->cp = context;
+}
+
+static size_t get_argv_len(char *argv[]) {
+  size_t argc = 0;
+  if (argv) {
+    char **cur_argv = argv;
+    while (*cur_argv != NULL) {
+      cur_argv = cur_argv + 1;
+      argc++;
+    }
+  }
+  return argc;
+}

@@ -18,6 +18,11 @@ typedef union {
 
 extern PCB *current;
 
-uintptr_t core_loader (const char *filename);
+PCB *get_current_pcb();
+void switch_boot_pcb();
+
+void naive_uload(PCB *pcb, const char *filename);
+void context_kload (PCB *cur_pcb, void(*fun)(void *), void *args);
+void context_uload(PCB *cur_pcb, const char *filename, char *const argv[], char *const envp[]);
 
 #endif

@@ -2,27 +2,13 @@
 
 #define MAX_NR_PROC 4
 
-void naive_uload(PCB *pcb, const char *filename);
-
 static PCB pcb[MAX_NR_PROC] __attribute__((used)) = {};
 static PCB pcb_boot = {};
 PCB *current = NULL;
+size_t pcb_index = 0;
 
 void switch_boot_pcb() {
   current = &pcb_boot;
-}
-
-void context_kload (PCB *cur_pcb, void(*fun)(void *), void *args) {
-  Context *context = kcontext((Area) { cur_pcb->stack, (uint8_t *)(&cur_pcb->stack) + STACK_SIZE }, fun, args);
-  cur_pcb->cp = context;
-}
-
-void context_uload(PCB *cur_pcb, const char *filename, char *const argv[], char *const envp[]) {
-  uintptr_t entry = core_loader(filename);
-  Context *context = ucontext(NULL, (Area) { cur_pcb->stack, (uint8_t *)(&cur_pcb->stack) + STACK_SIZE }, (void *)entry);
-
-  context->GPRx = (uintptr_t)argv;
-  cur_pcb->cp = context;
 }
 
 void hello_fun(void *arg) {
@@ -39,23 +25,21 @@ void init_proc() {
   // 测试hello_fun专用
   context_kload(&pcb[0], hello_fun, (void *)0x1111);
 
-  // 尝试给PAL传递参数
-  uintptr_t *area_end_ = (uintptr_t *)heap.end;
-  uintptr_t *area_start_ = area_end_ - 20;
-  // string area
-  char *strptr = (char*)(area_start_ + 10);
-  strcpy(strptr, "/bin/pal");
-  strcpy(strptr + 10, "--skip");
-  // argc
-  *area_start_ = 2;
-  // argv
-  *(area_start_ + 1) = (uintptr_t)strptr;
-  *(area_start_ + 2) = (uintptr_t)(strptr + 10);
-  *(area_start_ + 3) = 0;
-  // envp
-  *(area_start_ + 4) = 0;
+  /*
+  char *agv[] = {
+    "/bin/pal",
+    "--skip",
+    NULL
+  };
+  context_uload(&pcb[1], "/bin/pal", agv, NULL);
+  */
 
-  context_uload(&pcb[1], "/bin/pal", (char * const*)area_start_, (char * const*)(area_start_ + 4));
+  char user_program_path[50] = "/bin/exec-test";
+  char *argv[] = {
+    user_program_path,
+    NULL
+  };
+  context_uload(&pcb[1], user_program_path, argv, NULL);
   switch_boot_pcb();
   return;
 
@@ -69,6 +53,11 @@ void init_proc() {
 
 Context* schedule(Context *prev) {
   current->cp = prev;
-  current = (current == &pcb[0] ? &pcb[1] : &pcb[0]);
+  pcb_index = (current == &pcb[0] ? 1 : 0);
+  current = &pcb[pcb_index];
   return current->cp;
+}
+
+PCB * get_current_pcb() {
+  return &pcb[pcb_index];
 }

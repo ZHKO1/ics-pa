@@ -1,9 +1,19 @@
 #include <memory.h>
 
+#define USER_PROGRAM_ADDRESS 0x83000000
+
 static void *pf = NULL;
 
 void* new_page(size_t nr_page) {
-  return NULL;
+  void *pre_pf = pf;
+  void *new_pf = (void *)((uintptr_t)pre_pf + (nr_page << 12)); // nr_page * 4KB的连续内存区域
+  if (new_pf < (void *)USER_PROGRAM_ADDRESS) {
+    pf = new_pf;
+    memset(pre_pf, 0, nr_page << 12);
+    return pre_pf;
+  } else {
+    return NULL;
+  }
 }
 
 #ifdef HAS_VME
@@ -25,7 +35,12 @@ int mm_brk(uintptr_t brk) {
 }
 
 void init_mm() {
-  pf = (void *)ROUNDUP(heap.start, PGSIZE);
+  uintptr_t mm_start = (uintptr_t)heap.start;
+  uintptr_t mm_end = (uintptr_t)(USER_PROGRAM_ADDRESS);
+  pf = (void *)ROUNDUP((mm_start + (mm_end - mm_start) / 2), PGSIZE);
+  assert(pf >= (void *)mm_start);
+  assert(pf <= (void *)mm_end);
+
   Log("free physical pages starting from %p", pf);
 
 #ifdef HAS_VME
