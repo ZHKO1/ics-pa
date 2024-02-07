@@ -30,7 +30,11 @@ static inline void strace(int id, char *system_call_name, Context *c, uintptr_t 
       Log("%s (%d, %2d, %2d) = ???", system_call_name, c->GPR2, c->GPR3, c->GPR4 );
       break;
     case SYS_execve:
-      Log("%s (%s, %2d, %2d) = ???", system_call_name, (char *)(uintptr_t)c->GPR2, c->GPR3, c->GPR4 );
+      if (result == 0) {
+        Log("%s (%s, %2d, %2d) = ???", system_call_name, (char *)(uintptr_t)c->GPR2, c->GPR3, c->GPR4 );
+      } else {
+        Log("%s (%s, %2d, %2d) = %d", system_call_name, (char *)(uintptr_t)c->GPR2, c->GPR3, c->GPR4, result);
+      }
       break;
     default:
       Log("%s (%2d, %2d, %2d) = %2d", system_call_name, c->GPR2, c->GPR3, c->GPR4, result );
@@ -45,9 +49,9 @@ void do_syscall(Context *c) {
   switch (a[0]) {
     case SYS_exit:
       {
-        // int exit_status = c->GPR2;
+        int exit_status = c->GPR2;
         strace(SYS_exit, "exit", c, 0);
-        naive_uload(NULL, "/bin/menu");
+        halt(exit_status);
       }
       break;
     case SYS_yield:
@@ -106,12 +110,16 @@ void do_syscall(Context *c) {
         char* pathname = (char*)c->GPR2;
         char**argv = (char**)(uintptr_t)c->GPR3;
         char**envp = (char**)(uintptr_t)c->GPR4;
-        strace(SYS_execve, "execve", c, 0);
-        PCB *pcb_ptr = get_current_pcb();
-        context_uload(pcb_ptr, pathname, argv, envp);
-        switch_boot_pcb();
-        yield();
-        // naive_uload(NULL, pathname);
+        if (fs_open(pathname, 0, 0) < 0) {
+          STRACE(execve, -2);
+        } else {
+          strace(SYS_execve, "execve", c, 0);
+          PCB *pcb_ptr = get_current_pcb();
+          context_uload(pcb_ptr, pathname, argv, envp);
+          switch_boot_pcb();
+          yield();
+          // naive_uload(NULL, pathname);
+        }
       }
       break;
     default: panic("Unhandled syscall ID = %d", a[0]);
