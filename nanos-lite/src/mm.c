@@ -6,10 +6,11 @@ static void *pf = NULL;
 
 void* new_page(size_t nr_page) {
   void *pre_pf = pf;
-  void *new_pf = (void *)((uintptr_t)pre_pf + (nr_page << 12)); // nr_page * 4KB的连续内存区域
+  size_t size = nr_page << 12;
+  void *new_pf = (void *)((uintptr_t)pre_pf + size); // nr_page * 4KB的连续内存区域
   if (new_pf < (void *)USER_PROGRAM_ADDRESS) {
     pf = new_pf;
-    memset(pre_pf, 0, nr_page << 12);
+    memset(pre_pf, 0, size);
     return pre_pf;
   } else {
     return NULL;
@@ -18,7 +19,7 @@ void* new_page(size_t nr_page) {
 
 #ifdef HAS_VME
 static void* pg_alloc(int n) {
-  return NULL;
+  return new_page(ROUNDUP(n, PGSIZE) / PGSIZE);
 }
 #endif
 

@@ -30,6 +30,7 @@ static inline const char* reg_name(int idx) {
   return regs[check_reg_idx(idx)];
 }
 
+#define CSR_SATP 0x180
 #define CSR_MSTATUS 0x300
 #define CSR_MTVEC 0x305
 #define CSR_MEPC 0x341

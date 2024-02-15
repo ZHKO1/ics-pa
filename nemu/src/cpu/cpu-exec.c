@@ -31,6 +31,7 @@ CPU_csr csr = {
   mtvec: 0,
   mepc: 0,
   mcause: 0,
+  satp: 0,
 };
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us

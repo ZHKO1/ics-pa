@@ -35,6 +35,7 @@ void isa_reg_display() {
   printf("%-15s" FMT_REG_DISPLAY "\n", "mstatus", csr.mstatus);
   printf("%-15s" FMT_REG_DISPLAY "\n", "mtvec", csr.mtvec);
   printf("%-15s" FMT_REG_DISPLAY "\n", "mepc", csr.mepc);
+  printf("%-15s" FMT_REG_DISPLAY "\n", "satp", csr.satp);
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
@@ -55,6 +56,9 @@ word_t isa_reg_str2val(const char *s, bool *success) {
 
 word_t get_csr(word_t key) {
   switch (key) {
+    case CSR_SATP:
+      return csr.satp;
+      break;
     case CSR_MSTATUS:
       return csr.mstatus;
       break;
@@ -75,6 +79,9 @@ word_t get_csr(word_t key) {
 
 void set_csr(word_t key, word_t value) {
   switch (key) {
+    case CSR_SATP:
+      csr.satp = value;
+      break;
     case CSR_MSTATUS:
       csr.mstatus = value;
       break;
