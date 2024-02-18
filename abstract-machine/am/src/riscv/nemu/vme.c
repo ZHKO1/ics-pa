@@ -96,6 +96,8 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {
 }
 
 Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
+  assert(as);
+
   size_t context_size = sizeof(Context);
   void *kstack_start = kstack.start;
   void *kstack_end = kstack.end;
@@ -105,6 +107,7 @@ Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
   // TODO 这里sp寄存器应该要考虑换成抽象层写法
   context->gpr[2] = (uintptr_t)context;
   context->mepc = (uintptr_t)entry;
+  context->pdir = as->ptr;
 #ifdef CONFIG_DIFFTEST
   context->mstatus = 0x1800;
 #endif

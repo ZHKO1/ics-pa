@@ -35,6 +35,9 @@ endif
 
 ## 2. General Compilation Targets
 
+### 4.3 在分页机制上运行用户进程
+VME = 1
+
 ### Create the destination directory (`build/$ISA`)
 WORK_DIR  = $(shell pwd)
 DST_DIR   = $(WORK_DIR)/build/$(ISA)
@@ -171,8 +174,8 @@ $(CLEAN_ALL):
 .PHONY: clean-all $(CLEAN_ALL)
 
 ### Build fsimg and ramdisk for Nanos-lite
-APPS = pal menu nterm busybox
-TESTS = 
+APPS = 
+TESTS = dummy
 
 fsimg: $(addprefix apps/, $(APPS)) $(addprefix tests/, $(TESTS))
 	-for t in $^; do $(MAKE) -s -C $(NAVY_HOME)/$$t install; done

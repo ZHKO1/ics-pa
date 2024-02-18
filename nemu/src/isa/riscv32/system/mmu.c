@@ -36,9 +36,7 @@ paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type) {
   uint32_t VPN0 = virtual_guest.bitfield.VPN0;
   uint32_t page_offset = virtual_guest.bitfield.page_offset;
 
-  if(page_offset + len - 1 > PAGE_MASK) {
-    panic("MEM_RET_CROSS_PAGE");
-  }
+  Assert(page_offset + len - 1 <= PAGE_MASK, "MEM_RET_CROSS_PAGE");
   
   paddr_t pte_result_guest = 0;
   int i = 1; // let i = LEVELS − 1
@@ -46,23 +44,22 @@ paddr_t isa_mmu_translate(vaddr_t vaddr, int len, int type) {
   paddr_t pte_root_guest = dir_root_guest + VPN1 * pte_size;
   PTE *pte_root = (PTE *)guest_to_host(pte_root_guest);
   uint32_t pte_root_v = pte_root->bitfield_detail.V;
-  assert(pte_root_v);
+  
+  Assert(pte_root_v, "the PTE is unvalid");
   uint32_t pte_root_r = pte_root->bitfield_detail.R;
   uint32_t pte_root_x = pte_root->bitfield_detail.X;
   // uint32_t pte_root_w = pte_root->bitfield_detail.W;
   
   if ( (pte_root_r == 1) || (pte_root_x == 1) ) {
     pte_result_guest = pte_root_guest;
-    if (pte_root->bitfield_detail.PPN0) {
-      panic("misaligned superpage");
-    }
+    Assert(pte_root->bitfield_detail.PPN0 == 0, "this is a misaligned superpage");
   } else {
     i--;
     paddr_t dir_next_guest = pte_root->bitfield.PPN << PAGE_SHIFT;
     paddr_t pte_next_guest = dir_next_guest + VPN0 * pte_size;
     PTE *pte_next = (PTE *)guest_to_host(pte_next_guest);
     uint32_t pte_next_v = pte_next->bitfield_detail.V;
-    assert(pte_next_v);
+    Assert(pte_next_v, "the leaf PTE is unvalid");
     uint32_t pte_next_r = pte_next->bitfield_detail.R;
     // uint32_t pte_next_x = pte_next->bitfield_detail.X;
     uint32_t pte_next_w = pte_next->bitfield_detail.W;
