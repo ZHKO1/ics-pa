@@ -66,14 +66,8 @@ void __am_switch(Context *c) {
   }
 }
 
-void map(AddrSpace *as, void *va, void *pa, int prot) {
-  PTE *dir_root = (PTE *)as->ptr;
-  
-  VA virtual_address = (VA)(uint32_t)va;
-  uint32_t VPN1 = virtual_address.bitfield.VPN1;
-  uint32_t VPN0 = virtual_address.bitfield.VPN0;
-
-  // 寻找一级页表里的表项位置，检查是否为空，如果为空就设置表项
+// 寻找一级页表里的表项位置，检查是否为空，如果为空就设置表项
+static PTE *init_pte_root(PTE *dir_root, uint32_t VPN1) {
   PTE *pte_root = dir_root + VPN1;
   PTE *dir_next = NULL;
   if (pte_root->bitfield_detail.V == 0) {
@@ -86,13 +80,48 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {
   } else {
     dir_next = (PTE *)(pte_root->bitfield.PPN << 12);
   }
-  // 寻找二级页表里的表项位置，设置表项
+  return dir_next;
+}
+
+// 寻找二级页表里的表项位置，设置表项
+// 如果is_soft是false，根据pa参数设置表项
+// 如果is_soft是true，自动申请空间设置表项，除非表项已不为空
+static void init_pte_next(PTE *dir_next, uint32_t VPN0, bool is_soft, void *pa) {
   PTE *pte_next = dir_next + VPN0;
-  pte_next->bitfield.PPN = (uintptr_t)pa >> 12;
+  if (is_soft && pte_next->bitfield_detail.V) {
+    return;
+  }
+  if (is_soft) {
+    pa = pgalloc_usr(PGSIZE);
+  }
+  pte_next->bitfield.PPN = (uintptr_t)pa >> 12;  
   pte_next->bitfield_detail.V = 1;
   pte_next->bitfield_detail.R = 1;
   pte_next->bitfield_detail.W = 1;
   pte_next->bitfield_detail.X = 1;
+
+}
+
+void map(AddrSpace *as, void *va, void *pa, int prot) {
+  PTE *dir_root = (PTE *)as->ptr;
+  
+  VA virtual_address = (VA)(uint32_t)va;
+  uint32_t VPN1 = virtual_address.bitfield.VPN1;
+  uint32_t VPN0 = virtual_address.bitfield.VPN0;
+
+  PTE *dir_next = init_pte_root(dir_root, VPN1);
+  init_pte_next(dir_next, VPN0, false, pa);
+}
+
+void soft_map(AddrSpace *as, void *va, int prot) {
+  PTE *dir_root = (PTE *)as->ptr;
+  
+  VA virtual_address = (VA)(uint32_t)va;
+  uint32_t VPN1 = virtual_address.bitfield.VPN1;
+  uint32_t VPN0 = virtual_address.bitfield.VPN0;
+
+  PTE *dir_next = init_pte_root(dir_root, VPN1);
+  init_pte_next(dir_next, VPN0, true, NULL);
 }
 
 Context *ucontext(AddrSpace *as, Area kstack, void *entry) {

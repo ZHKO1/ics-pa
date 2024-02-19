@@ -1,7 +1,10 @@
 #include <memory.h>
+#include <proc.h>
 
+void soft_map(AddrSpace *as, void *va, int prot);
 
 static void *pf = NULL;
+extern PCB *current;
 
 void* new_page(size_t nr_page) {
   void *pre_pf = pf;
@@ -31,6 +34,13 @@ void free_page(void *p) {
 int mm_brk(uintptr_t brk) {
   if ( (void *)brk > heap.end ){
     return -1;
+  }
+  if (current->max_brk < brk) {
+    uintptr_t va = ROUNDDOWN(current->max_brk, PGSIZE);
+    for (; va < ROUNDDOWN(brk, PGSIZE); va += PGSIZE) {
+      soft_map(&current->as, (void *)va, -1);
+    }
+    current->max_brk = brk;
   }
   return 0;
 }

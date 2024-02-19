@@ -34,7 +34,7 @@ void init_proc() {
   context_uload(&pcb[1], "/bin/pal", agv, NULL);
   */
 
-  char user_program_path[50] = "/bin/dummy";
+  char user_program_path[50] = "/bin/pal";
   char *argv[] = {
     user_program_path,
     NULL

@@ -65,6 +65,23 @@ static void map_program(AddrSpace *as, void *va, void *pa, int prot, size_t nr_p
   }
 }
 
+static Elf_PHDR_SZ get_program_size(AddrSpace *as, Elf_Half e_phnum, Elf_Phdr *elf_phdrs_ptr) {
+  Elf_Addr vaddr_max = 0;
+  for (size_t i = 0; i < e_phnum; i++) {
+    Elf_Phdr *phdr = elf_phdrs_ptr + i;
+    uint32_t p_type = phdr->p_type;
+    if (p_type == PT_LOAD) {
+      Elf_Addr p_vaddr = phdr->p_vaddr;
+      Elf_PHDR_SZ p_memsz = phdr->p_memsz;
+      Elf_Addr p_vaddr_end = p_vaddr + p_memsz;
+      if (vaddr_max < p_vaddr_end) {
+        vaddr_max = p_vaddr_end;      
+      }
+    }
+  }
+  return vaddr_max - (Elf_Addr)as->area.start;
+}
+
 static void load_elf_program(AddrSpace *as, int elf_fd, Elf_Ehdr *elf_ehdr_ptr) {
   /*
   printf("Program header table file offset: %d\n", elf_ehdr_ptr->e_phoff);
@@ -79,6 +96,11 @@ static void load_elf_program(AddrSpace *as, int elf_fd, Elf_Ehdr *elf_ehdr_ptr) 
 
   Elf_Off e_phoff = elf_ehdr_ptr->e_phoff;
   Elf_Phdr *elf_phdrs_ptr = (Elf_Phdr *)get_data_from_ramdisk_ptr(elf_fd, e_phoff, sizeof(Elf_Phdr) * e_phnum);
+
+  Elf_PHDR_SZ program_size = get_program_size(as, e_phnum, elf_phdrs_ptr);
+  size_t nr_page = ROUNDUP(program_size, PGSIZE) / PGSIZE;
+  void *p_paddr_start = new_page(nr_page);
+  map_program(as, (void *)as->area.start, (void *)p_paddr_start, -1, nr_page);
 
   for (size_t i = 0; i < e_phnum; i++) {
     Elf_Phdr *phdr = elf_phdrs_ptr + i;
@@ -95,9 +117,7 @@ static void load_elf_program(AddrSpace *as, int elf_fd, Elf_Ehdr *elf_ehdr_ptr) 
       // printf("p_filesz = 0x%08x ", p_filesz);
       // printf("p_memsz = 0x%08x ", p_memsz);
       
-      size_t nr_page = ROUNDUP(p_memsz, PGSIZE) / PGSIZE;
-      void *p_paddr = new_page(nr_page);
-      map_program(as, (void *)p_vaddr, (void *)p_paddr, -1, nr_page);
+      Elf_Addr p_paddr = (Elf_Addr)p_paddr_start + p_vaddr - (Elf_Addr)as->area.start;      
       fs_lseek(elf_fd, p_offset, SEEK_SET);
       fs_read(elf_fd, (void *)p_paddr, p_filesz);
       if(p_filesz < p_memsz) {
@@ -176,6 +196,7 @@ void context_uload(PCB *cur_pcb, const char *filename, char *const argv[], char 
   Context *context = ucontext(&cur_pcb->as, (Area) { &cur_pcb->max_brk + 1, (uint8_t *)(&cur_pcb->stack) + STACK_SIZE }, (void *)entry);
   context->GPRx = (uintptr_t)stack_argc;
   cur_pcb->cp = context;
+  cur_pcb->max_brk = (uintptr_t)cur_pcb->as.area.start;
 }
 
 static size_t get_argv_len(char *argv[]) {
