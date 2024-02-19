@@ -126,8 +126,8 @@ static void load_elf_program(AddrSpace *as, int elf_fd, Elf_Ehdr *elf_ehdr_ptr) 
     } else {
     }
     // printf("\n");
-    free(elf_phdrs_ptr);
   }
+  free(elf_phdrs_ptr);
 }
 
 static uintptr_t loader(PCB *pcb, const char *filename) {
