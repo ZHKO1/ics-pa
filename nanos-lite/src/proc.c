@@ -22,8 +22,7 @@ void hello_fun(void *arg) {
 }
 
 void init_proc() {
-  // 测试hello_fun专用
-  // context_kload(&pcb[0], hello_fun, (void *)0x1111);
+  context_kload(&pcb[0], hello_fun, (void *)0x1111);
 
   /*
   char *agv[] = {
@@ -39,7 +38,7 @@ void init_proc() {
     user_program_path,
     NULL
   };
-  context_uload(&pcb[0], user_program_path, argv, NULL);
+  context_uload(&pcb[1], user_program_path, argv, NULL);
   switch_boot_pcb();
   Log("Initializing processes...");
 
@@ -49,8 +48,7 @@ void init_proc() {
 
 Context* schedule(Context *prev) {
   current->cp = prev;
-  // pcb_index = (current == &pcb[0] ? 1 : 0);
-  pcb_index = 0;
+  pcb_index = (current == &pcb[0] ? 1 : 0);
   current = &pcb[pcb_index];
   return current->cp;
 }
