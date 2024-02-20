@@ -113,17 +113,6 @@ void map(AddrSpace *as, void *va, void *pa, int prot) {
   init_pte_next(dir_next, VPN0, false, pa);
 }
 
-void soft_map(AddrSpace *as, void *va, int prot) {
-  PTE *dir_root = (PTE *)as->ptr;
-  
-  VA virtual_address = (VA)(uint32_t)va;
-  uint32_t VPN1 = virtual_address.bitfield.VPN1;
-  uint32_t VPN0 = virtual_address.bitfield.VPN0;
-
-  PTE *dir_next = init_pte_root(dir_root, VPN1);
-  init_pte_next(dir_next, VPN0, true, NULL);
-}
-
 Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
   assert(as);
 

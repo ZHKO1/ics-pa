@@ -9,6 +9,11 @@
 # define Elf_Off Elf64_Off
 # define Elf_Addr Elf64_Addr
 # define Elf_PHDR_SZ Elf64_Xword
+# define Elf_Shdr Elf64_Shdr
+# define Elf_Sym Elf64_Sym
+# define Elf_SHDR_SZ Elf64_Xword
+#define ELF_ST_TYPE ELF64_ST_TYPE
+#define ELF_ST_BIND ELF64_ST_BIND
 #else
 # define Elf_Ehdr Elf32_Ehdr
 # define Elf_Phdr Elf32_Phdr
@@ -16,6 +21,11 @@
 # define Elf_Off Elf32_Off
 # define Elf_Addr Elf32_Addr
 # define Elf_PHDR_SZ Elf32_Word
+# define Elf_Shdr Elf32_Shdr
+# define Elf_Sym Elf32_Sym
+# define Elf_SHDR_SZ Elf32_Word
+#define ELF_ST_TYPE ELF32_ST_TYPE
+#define ELF_ST_BIND ELF32_ST_BIND
 #endif
 
 #if defined(__ISA_AM_NATIVE__)
@@ -130,12 +140,67 @@ static void load_elf_program(AddrSpace *as, int elf_fd, Elf_Ehdr *elf_ehdr_ptr) 
   free(elf_phdrs_ptr);
 }
 
+static Elf_Addr get_elf_maxbrk(int elf_fd, Elf_Ehdr *elf_ehdr_ptr) {
+  size_t shdr_size = sizeof (Elf_Shdr);
+  assert(shdr_size == (elf_ehdr_ptr->e_shentsize));
+  size_t shdrs_size = elf_ehdr_ptr->e_shentsize * elf_ehdr_ptr->e_shnum;  
+
+  assert(elf_ehdr_ptr->e_shoff);
+  Elf_Shdr *elf_shdrs_ptr = (Elf_Shdr *)get_data_from_ramdisk_ptr(elf_fd, elf_ehdr_ptr->e_shoff, shdrs_size);
+
+  assert(elf_ehdr_ptr->e_shstrndx != SHN_UNDEF);  
+  Elf_Shdr *shdr_shstrtab = elf_shdrs_ptr + elf_ehdr_ptr->e_shstrndx;
+  assert(shdr_shstrtab->sh_type == SHT_STRTAB);
+
+  char *shstrtab_ptr = (char *)get_data_from_ramdisk_ptr(elf_fd, shdr_shstrtab->sh_offset, shdr_shstrtab->sh_size);
+
+  char *strtab_ptr = NULL;
+  Elf_Sym *symtab_ptr = NULL;
+  Elf_SHDR_SZ symtab_size = 0;
+
+  for(size_t i = 0; i < elf_ehdr_ptr->e_shnum; i++){
+    Elf_Shdr *shdr = elf_shdrs_ptr + i;
+    char *shdr_name = shstrtab_ptr + shdr->sh_name;
+    Elf_Off sh_offset = shdr->sh_offset;
+    Elf_SHDR_SZ sh_size = shdr->sh_size;
+    if(strcmp(shdr_name, ".strtab") == 0){
+      strtab_ptr = (char *)get_data_from_ramdisk_ptr(elf_fd, sh_offset, sh_size);
+    } else if(strcmp(shdr_name, ".symtab") == 0) {
+      symtab_ptr = (Elf_Sym *)get_data_from_ramdisk_ptr(elf_fd, sh_offset, sh_size);
+      symtab_size = sh_size;
+    } else {
+    }
+  }
+
+  Elf_Addr result = 0;
+
+  size_t sym_size = sizeof (Elf_Sym);
+  size_t len = symtab_size / sym_size;
+  for(size_t i = 0; i < len; i++){
+    Elf_Sym *sym = symtab_ptr + i;
+    unsigned char st_info = sym->st_info;
+    char *sym_name = strtab_ptr + sym->st_name;
+    if ((strcmp(sym_name, "end") == 0) && (ELF_ST_TYPE(st_info) == STT_NOTYPE) && (ELF_ST_BIND(st_info) == STB_GLOBAL)) {
+      result = sym->st_value;
+    }
+  }
+
+  free(elf_shdrs_ptr);
+  free(shstrtab_ptr);
+  free(strtab_ptr);
+  free(symtab_ptr);
+  return result;
+}
+
+// 加载文件到虚拟内存里，同时更新pcb->max_brk为end符号的地址
 static uintptr_t loader(PCB *pcb, const char *filename) {
   int elf_fd = fs_open(filename, 0, 0);
   Elf_Ehdr *elf_ehdr_ptr = (Elf_Ehdr *)get_data_from_ramdisk_ptr(elf_fd, 0, sizeof(Elf_Ehdr));
   check_elf_mag(elf_ehdr_ptr);
   load_elf_program(&pcb->as, elf_fd, elf_ehdr_ptr);
   Elf_Addr e_entry = elf_ehdr_ptr->e_entry;
+  Elf_Addr max_brk = get_elf_maxbrk(elf_fd, elf_ehdr_ptr);
+  pcb->max_brk = max_brk;
   free(elf_ehdr_ptr);
   return e_entry;
 }
@@ -196,7 +261,6 @@ void context_uload(PCB *cur_pcb, const char *filename, char *const argv[], char 
   Context *context = ucontext(&cur_pcb->as, (Area) { &cur_pcb->max_brk + 1, (uint8_t *)(&cur_pcb->stack) + STACK_SIZE }, (void *)entry);
   context->GPRx = (uintptr_t)stack_argc;
   cur_pcb->cp = context;
-  cur_pcb->max_brk = (uintptr_t)cur_pcb->as.area.start;
 }
 
 static size_t get_argv_len(char *argv[]) {
