@@ -37,7 +37,7 @@ int mm_brk(uintptr_t brk) {
   }
   if (current->max_brk < brk) {
     uintptr_t va = ROUNDUP(current->max_brk, PGSIZE);
-    for (; va < ROUNDDOWN(brk, PGSIZE); va += PGSIZE) {
+    for (; va <= ROUNDDOWN(brk, PGSIZE); va += PGSIZE) {
       void *pa = pg_alloc(PGSIZE);
       map(&current->as, (void *)va, (void *)pa, -1);
     }
@@ -47,8 +47,8 @@ int mm_brk(uintptr_t brk) {
 }
 
 void init_mm() {
-  // pf主要是用于new_page函数，为了避免跟klib的malloc（从heap.start开始分配）冲突，因此这里先设置分配页从0x84000000开始分配
-  pf = (void *)ROUNDUP(0x84000000, PGSIZE);
+  // pf主要是用于new_page函数，为了避免跟klib的malloc（从heap.start开始分配）冲突，因此这里给klib的malloc 0x2000000的空间
+  pf = (void *)ROUNDUP((uintptr_t)heap.start + 0x2000000, PGSIZE);
   // TODO 当klib的malloc分配过多内存，依然有可能跟pf冲突，所以可能需要加个报错逻辑
 
   Log("free physical pages starting from %p", pf);
