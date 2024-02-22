@@ -114,8 +114,7 @@ void do_syscall(Context *c) {
           STRACE(execve, -2);
         } else {
           strace(SYS_execve, "execve", c, 0);
-          PCB *pcb_ptr = get_current_pcb();
-          context_uload(pcb_ptr, pathname, argv, envp);
+          context_uload(current, pathname, argv, envp);
           switch_boot_pcb();
           yield();
           // naive_uload(NULL, pathname);

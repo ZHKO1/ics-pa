@@ -4,7 +4,6 @@
 void map(AddrSpace *as, void *va, void *pa, int prot);
 
 static void *pf = NULL;
-extern PCB *current;
 
 void* new_page(size_t nr_page) {
   void *pre_pf = pf;
