@@ -35,7 +35,7 @@ int mm_brk(uintptr_t brk) {
     return -1;
   }
   if (current->max_brk < brk) {
-    uintptr_t va = ROUNDUP(current->max_brk, PGSIZE);
+    uintptr_t va = ((current->max_brk)/PGSIZE + 1) * PGSIZE;
     for (; va <= ROUNDDOWN(brk, PGSIZE); va += PGSIZE) {
       void *pa = pg_alloc(PGSIZE);
       map(&current->as, (void *)va, (void *)pa, -1);
