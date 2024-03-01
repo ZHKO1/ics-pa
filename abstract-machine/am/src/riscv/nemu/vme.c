@@ -57,7 +57,13 @@ void unprotect(AddrSpace *as) {
 }
 
 void __am_get_cur_as(Context *c) {
-  c->pdir = (vme_enable ? (void *)get_satp() : NULL);
+  /**
+   * 按照我对4.3[支持虚存管理的多道程序]这一段的理解，内核线程上下文的pdir应该一直都是NULL不变
+   * 但是在__am_irq_handle函数里对__am_get_cur_as的调用，会将当前页表地址保存到pdir字段，导致内核线程的pdir变化
+   * 所以__am_get_cur_as内需要加上判断用户线程还是内核线程的逻辑，这里根据kas.ptr来判断
+  */
+  void *pdir = (void *)get_satp();
+  c->pdir = (vme_enable && (pdir != kas.ptr)? (void *)pdir: NULL);
 }
 
 void __am_switch(Context *c) {

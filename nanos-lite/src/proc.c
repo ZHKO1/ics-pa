@@ -50,14 +50,5 @@ Context* schedule(Context *prev) {
   current->cp = prev;
   pcb_index = (current == &pcb[0] ? 1 : 0);
   current = &pcb[pcb_index];
-  /**
-   * 按照我对4.3[支持虚存管理的多道程序]这一段的理解，内核线程上下文的pdir应该一直都是NULL不变
-   * 但是在__am_irq_handle函数里对__am_irq_handle的调用，会将当前页表地址保存到pdir字段，导致内核线程的pdir变化
-   * 但是AM这一层按理说是无法判断用户线程还是内核线程，所以目前只能在nanos-lite这一层的schedule函数里做出丑陋的重新初始化pdir
-  */
-  if(pcb_index == 0){
-    current->cp->pdir=NULL;
-  }
   return current->cp;
 }
-
