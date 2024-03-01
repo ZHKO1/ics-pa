@@ -38,6 +38,7 @@
 
 static size_t get_argv_len(char *argv[]);
 void map(AddrSpace *as, void *va, void *pa, int prot);
+static uintptr_t get_stack_va_by_stack_pa(uintptr_t pa, uintptr_t stack_start_pa, uintptr_t stack_start_va);
 
 static void *get_data_from_ramdisk_ptr(int elf_fd, size_t offset, size_t size) {
   void *buf = malloc(size);
@@ -223,8 +224,10 @@ void context_uload(PCB *cur_pcb, const char *filename, char *const argv[], char 
   size_t nr_page = 8;
   uintptr_t *stack_pa_start = (uintptr_t *)new_page(nr_page);
   assert(stack_pa_start);
-  uintptr_t *stack_pa_end = (uintptr_t *)((uintptr_t)stack_pa_start + (nr_page << 12));
+  uintptr_t *stack_pa_end = (uintptr_t *)((uintptr_t)stack_pa_start + nr_page * PGSIZE);
   
+  void* stack_va_start = cur_pcb->as.area.end - nr_page * PGSIZE;
+
   // 用户栈 给string_area分配1024字节的容量
   char *stack_string_area = (char *)stack_pa_end - (1 << 10);
   char *stack_string_area_curptr = stack_string_area;
@@ -234,7 +237,7 @@ void context_uload(PCB *cur_pcb, const char *filename, char *const argv[], char 
   char **stack_cur_envp = stack_envp;
   for (size_t i = 0; i < envp_size; i++) {
     strcpy(stack_string_area_curptr, envp[i]);
-    *stack_cur_envp = stack_string_area_curptr;
+    *stack_cur_envp = (char *)get_stack_va_by_stack_pa((uintptr_t)stack_string_area_curptr, (uintptr_t)stack_pa_start, (uintptr_t)stack_va_start);
     stack_string_area_curptr = stack_string_area_curptr + strlen(envp[i]) + 1;
     assert(stack_string_area_curptr < (char *)stack_pa_end);
     stack_cur_envp = stack_cur_envp + 1;
@@ -246,7 +249,7 @@ void context_uload(PCB *cur_pcb, const char *filename, char *const argv[], char 
   char **stack_cur_argv = stack_argv;
   for (size_t i = 0; i < argv_size; i++) {
     strcpy(stack_string_area_curptr, argv[i]);
-    *stack_cur_argv = stack_string_area_curptr;
+    *stack_cur_argv = (char *)get_stack_va_by_stack_pa((uintptr_t)stack_string_area_curptr, (uintptr_t)stack_pa_start, (uintptr_t)stack_va_start);
     stack_string_area_curptr = stack_string_area_curptr + strlen(argv[i]) + 1;
     assert(stack_string_area_curptr < (char *)stack_pa_end);
     stack_cur_argv = stack_cur_argv + 1;
@@ -256,7 +259,6 @@ void context_uload(PCB *cur_pcb, const char *filename, char *const argv[], char 
   uintptr_t *stack_argc = (uintptr_t *)stack_argv - 1;
   *stack_argc = argv_size;
 
-  void* stack_va_start = cur_pcb->as.area.end - nr_page * PGSIZE;
   map_program(&cur_pcb->as, stack_va_start, (void *)stack_pa_start, -1, nr_page);
 
   Context *context = ucontext(&cur_pcb->as, (Area) { &cur_pcb->max_brk + 1, (uint8_t *)(&cur_pcb->stack) + STACK_SIZE }, (void *)entry);
@@ -274,4 +276,8 @@ static size_t get_argv_len(char *argv[]) {
     }
   }
   return argc;
+}
+
+static uintptr_t get_stack_va_by_stack_pa(uintptr_t pa, uintptr_t stack_start_pa, uintptr_t stack_start_va) {
+  return stack_start_va + (pa - stack_start_pa);
 }
