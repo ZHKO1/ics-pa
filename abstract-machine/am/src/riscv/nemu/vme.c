@@ -127,9 +127,6 @@ Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
   void *kstack_end = kstack.end;
   memset(kstack_start, 0, (uintptr_t)kstack_end - (uintptr_t)kstack_start);
   Context *context = (Context *)((uintptr_t)kstack_end - context_size);
-  // 设置上下文的sp寄存器
-  // TODO 这里sp寄存器应该要考虑换成抽象层写法
-  context->gpr[2] = (uintptr_t)context;
   context->mepc = (uintptr_t)entry;
   context->pdir = as->ptr;
 #ifdef CONFIG_DIFFTEST
