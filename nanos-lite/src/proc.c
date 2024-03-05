@@ -47,8 +47,16 @@ void init_proc() {
 }
 
 Context* schedule(Context *prev) {
+  static int pcb_count = 0;
+  #define PCB_COUNT_MAX 200
   current->cp = prev;
-  pcb_index = (current == &pcb[0] ? 1 : 0);
+  if (pcb_count < PCB_COUNT_MAX) {
+    pcb_index = 1;
+    pcb_count++;
+  } else if(pcb_count == PCB_COUNT_MAX){
+    pcb_index = 0;
+    pcb_count = 0;
+  }
   current = &pcb[pcb_index];
   return current->cp;
 }
