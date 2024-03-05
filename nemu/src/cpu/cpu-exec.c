@@ -62,6 +62,12 @@ static void exec_once(Decode *s, vaddr_t pc) {
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
+
+  word_t intr = isa_query_intr();
+  if (intr != INTR_EMPTY) {
+    cpu.pc = isa_raise_intr(intr, cpu.pc);
+  }
+
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);

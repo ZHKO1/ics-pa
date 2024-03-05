@@ -132,5 +132,6 @@ Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
 #ifdef CONFIG_DIFFTEST
   context->mstatus = 0x1800;
 #endif
+  context->mstatus = context->mstatus | 0x80; 
   return context;
 }

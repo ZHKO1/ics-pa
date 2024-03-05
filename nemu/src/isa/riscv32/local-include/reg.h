@@ -47,5 +47,6 @@ void set_csr(word_t key, word_t value);
   enum { MCAUSE_##name = get_mcause(inter, exccode) }; 
 
 MCAUSE_CASE(ENVIRONMENTCALL, 0, 11)
+MCAUSE_CASE(MACHINETIMERINTR, 1, 7)
 
 #endif

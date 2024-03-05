@@ -71,6 +71,16 @@ static inline void decode_check_jalr_callret(Decode *s, int rd, word_t imm){
   }
 }
 
+static void isa_mret(Decode *s) {
+  s->dnpc = csr.mepc;
+
+  MSTATUS mstatus = {};
+  mstatus.value = csr.mstatus;
+  mstatus.bitfield_detail.MIE = mstatus.bitfield_detail.MPIE;
+  mstatus.bitfield_detail.MPIE = 1;
+  csr.mstatus = (word_t)mstatus.value;
+}
+
 static int decode_exec(Decode *s) {
   int rd = 0;
   word_t src1 = 0, src2 = 0, imm = 0;
@@ -139,7 +149,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("??????? ????? ????? 010 ????? 11100 11", csrrs  , I, {word_t t = get_csr(imm);set_csr(imm, src1 | t);R(rd) = t;});
 
   // Trap-Return Instructions
-  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, s->dnpc = get_csr(CSR_MEPC));
+  INSTPAT("0011000 00010 00000 000 00000 11100 11", mret   , N, isa_mret(s));
 
   INSTPAT("??????? ????? ????? ??? ????? ????? ??", inv    , N, INV(s->pc));
   INSTPAT_END();

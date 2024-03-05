@@ -23,6 +23,9 @@ Context* __am_irq_handle(Context *c) {
         }
         c->mepc = c->mepc + 4;
         break;
+      case MCAUSE_MACHINETIMERINTR:
+        ev.event = EVENT_IRQ_TIMER;
+        break;
       default: ev.event = EVENT_ERROR; break;
     }
 
@@ -62,6 +65,8 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
   // 看了下4.4的“用户态和栈指针”，猜测大概是根据栈指针判断
   context->mstatus = 0x1800;
 #endif
+  context->mstatus = context->mstatus | 0x80; 
+
   return context;
 }
 

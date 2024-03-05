@@ -21,6 +21,7 @@
 typedef struct {
   word_t gpr[MUXDEF(CONFIG_RVE, 16, 32)];
   vaddr_t pc;
+  bool INTR;
 } MUXDEF(CONFIG_RV64, riscv64_CPU_state, riscv32_CPU_state);
 
 typedef struct {
@@ -72,5 +73,34 @@ typedef union {
 
 typedef RISCV32_VA VA;
 typedef RISCV32_PTE PTE;
+
+typedef union {
+  struct {
+    uint32_t WPRI_part0 : 1;
+    uint32_t SIE : 1;
+    uint32_t WPRI_part1 : 1;
+    uint32_t MIE : 1;
+    uint32_t WPRI_part2 : 1;
+    uint32_t SPIE : 1;
+    uint32_t UBE : 1;
+    uint32_t MPIE : 1;
+    uint32_t SPP : 1;
+    uint32_t VS : 2;
+    uint32_t MPP : 2;
+    uint32_t FS : 2;
+    uint32_t XS : 2;
+    uint32_t MPRV : 2;
+    uint32_t SUM : 1;
+    uint32_t MXR : 1;
+    uint32_t TVM : 1;
+    uint32_t TW : 1;
+    uint32_t TSR : 1;
+    uint32_t WPRI_part3 : 8;
+    uint32_t SD : 1;
+  } bitfield_detail;
+  uint32_t value;
+} RISCV32_MSTATUS;
+
+typedef RISCV32_MSTATUS MSTATUS;
 
 #endif

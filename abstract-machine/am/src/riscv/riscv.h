@@ -37,5 +37,6 @@ enum { MODE_U, MODE_S, MODE_M = 3 };
   enum { MCAUSE_##name = get_mcause(inter, exccode) }; 
 
 MCAUSE_CASE(ENVIRONMENTCALL, 0, 11)
+MCAUSE_CASE(MACHINETIMERINTR, 1, 7)
 
 #endif
