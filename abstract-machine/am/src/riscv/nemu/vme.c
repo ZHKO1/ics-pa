@@ -72,6 +72,12 @@ void __am_switch(Context *c) {
   }
 }
 
+void switch_addrspace(void* pdir) {
+  if (vme_enable && pdir != NULL) {
+    set_satp(pdir);
+  }
+}
+
 // 寻找一级页表里的表项位置，检查是否为空，如果为空就设置表项
 static PTE *init_pte_root(PTE *dir_root, uint32_t VPN1) {
   PTE *pte_root = dir_root + VPN1;
@@ -127,11 +133,14 @@ Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
   void *kstack_end = kstack.end;
   memset(kstack_start, 0, (uintptr_t)kstack_end - (uintptr_t)kstack_start);
   Context *context = (Context *)((uintptr_t)kstack_end - context_size);
+  context->GPRSP = (uintptr_t)context;
   context->mepc = (uintptr_t)entry;
   context->pdir = as->ptr;
 #ifdef CONFIG_DIFFTEST
   context->mstatus = 0x1800;
 #endif
-  context->mstatus = context->mstatus | 0x80; 
+  context->mstatus = context->mstatus | 0x80;
+  context->np = 1;
+
   return context;
 }

@@ -51,7 +51,7 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
 }
 
 void isa_difftest_attach() {
-  // 这里需要在ref里执行csrrw指令，从而能同步dut的 mstatus，mtvec，mepc，mcause, satp的值到 ref
+  // 这里需要在ref里执行csrrw指令，从而能同步dut的 mstatus，mtvec，mepc，mcause, satp, mscratch的值到 ref
   CPU_state cpu_ref;
   cpu_ref.pc = RESET_VECTOR;
 
@@ -61,6 +61,7 @@ void isa_difftest_attach() {
     csrrw_inst(CSR_MSTATUS, csr.mstatus, 3, &cpu_ref),
     csrrw_inst(CSR_MCAUSE, csr.mcause, 4, &cpu_ref),
     csrrw_inst(CSR_SATP, csr.satp, 5, &cpu_ref),
+    csrrw_inst(CSR_MSCRATCH, csr.mscratch, 6, &cpu_ref),
   };
 
   ref_difftest_memcpy(RESET_VECTOR, insts, sizeof(insts), DIFFTEST_TO_REF);

@@ -11,6 +11,7 @@ struct Context {
   // TODO: fix the order of these members to match trap.S
   uintptr_t gpr[NR_REGS], mcause, mstatus, mepc;
   void *pdir;
+  uintptr_t np; // 0:内核态 1:用户态
 };
 
 #ifdef __riscv_e
@@ -23,6 +24,7 @@ struct Context {
 #define GPR3 gpr[11]
 #define GPR4 gpr[12]
 #define GPRx gpr[10]
+#define GPRSP gpr[2]
 
 typedef union {
   struct {

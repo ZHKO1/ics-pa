@@ -37,6 +37,7 @@ void isa_reg_display() {
   printf("%-15s" FMT_REG_DISPLAY "\n", "mtvec", csr.mtvec);
   printf("%-15s" FMT_REG_DISPLAY "\n", "mepc", csr.mepc);
   printf("%-15s" FMT_REG_DISPLAY "\n", "satp", csr.satp);
+  printf("%-15s" FMT_REG_DISPLAY "\n", "mscratch", csr.mscratch);
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
@@ -71,7 +72,10 @@ word_t get_csr(word_t key) {
       break;
     case CSR_MCAUSE:
       return csr.mcause;
-      break;    
+      break;
+    case CSR_MSCRATCH:
+      return csr.mscratch;
+      break;
     default:
       panic("CSR GET: Unkown  reg(key="FMT_WORD")", key);
       break;
@@ -94,6 +98,9 @@ void set_csr(word_t key, word_t value) {
       break;
     case CSR_MCAUSE:
       csr.mcause = value;
+      break;
+    case CSR_MSCRATCH:
+      csr.mscratch = value;
       break;
     default:
       panic("CSR SET: Unkown  reg(key="FMT_WORD")", key);

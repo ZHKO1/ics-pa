@@ -22,16 +22,14 @@ void hello_fun(void *arg) {
 }
 
 void init_proc() {
-  context_kload(&pcb[0], hello_fun, (void *)0x1111);
+  // context_kload(&pcb[0], hello_fun, (void *)0x1111);
 
-  /*
-  char *agv[] = {
-    "/bin/pal",
-    "--skip",
+  char user_program_path_[50] = "/bin/hello";
+  char *argv_[] = {
+    user_program_path_,
     NULL
   };
-  context_uload(&pcb[1], "/bin/pal", agv, NULL);
-  */
+  context_uload(&pcb[0], user_program_path_, argv_, NULL);
 
   char user_program_path[50] = "/bin/pal";
   char *argv[] = {
@@ -48,7 +46,7 @@ void init_proc() {
 
 Context* schedule(Context *prev) {
   static int pcb_count = 0;
-  #define PCB_COUNT_MAX 200
+  #define PCB_COUNT_MAX 600
   current->cp = prev;
   if (pcb_count < PCB_COUNT_MAX) {
     pcb_index = 1;
@@ -58,5 +56,6 @@ Context* schedule(Context *prev) {
     pcb_count = 0;
   }
   current = &pcb[pcb_index];
+  switch_addrspace(current->as.ptr);
   return current->cp;
 }

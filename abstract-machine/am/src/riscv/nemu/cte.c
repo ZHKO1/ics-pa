@@ -4,11 +4,16 @@
 
 void __am_get_cur_as(Context *c);
 void __am_switch(Context *c);
+static inline void set_ksp(void *address);
+static inline uintptr_t get_ksp();
 
 static Context* (*user_handler)(Event, Context*) = NULL;
 
 Context* __am_irq_handle(Context *c) {
-  __am_get_cur_as(c);
+
+  c->np = get_ksp() ? 1 : 0;
+  set_ksp(0);
+  
   if (user_handler) {
     Event ev = {0};
     switch (c->mcause) {
@@ -31,7 +36,7 @@ Context* __am_irq_handle(Context *c) {
 
     c = user_handler(ev, c);
     assert(c != NULL);
-    __am_switch(c);
+
   }
 
   return c;
@@ -55,6 +60,7 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
   void *kstack_end = kstack.end;
   memset(kstack_start, 0, (uintptr_t)kstack_end - (uintptr_t)kstack_start);
   Context *context = (Context *)((uintptr_t)kstack_end - context_size);
+  context->GPRSP = (uintptr_t)context;
   // 上下文的a1寄存器保存参数arg
   context->GPRx = (uintptr_t)arg;
   context->mepc = (uintptr_t)entry;
@@ -66,6 +72,7 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
   context->mstatus = 0x1800;
 #endif
   context->mstatus = context->mstatus | 0x80; 
+  context->np = 0;
 
   return context;
 }
@@ -83,4 +90,14 @@ bool ienabled() {
 }
 
 void iset(bool enable) {
+}
+
+static inline void set_ksp(void *address) {
+  asm volatile("csrw mscratch, %0" : : "r"((uintptr_t)address));
+}
+
+static inline uintptr_t get_ksp() {
+  uintptr_t mscratch;
+  asm volatile("csrr %0, mscratch" : "=r"(mscratch));
+  return mscratch;
 }
