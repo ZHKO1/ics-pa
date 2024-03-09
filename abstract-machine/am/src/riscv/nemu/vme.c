@@ -129,9 +129,9 @@ Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
   assert(as);
 
   size_t context_size = sizeof(Context);
-  void *kstack_start = kstack.start;
+  // void *kstack_start = kstack.start;
   void *kstack_end = kstack.end;
-  memset(kstack_start, 0, (uintptr_t)kstack_end - (uintptr_t)kstack_start);
+  memset(kstack_end - context_size, 0, sizeof(Context));
   Context *context = (Context *)((uintptr_t)kstack_end - context_size);
   context->GPRSP = (uintptr_t)context;
   context->mepc = (uintptr_t)entry;

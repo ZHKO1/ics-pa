@@ -115,6 +115,7 @@ void do_syscall(Context *c) {
         } else {
           strace(SYS_execve, "execve", c, 0);
           context_uload(current, pathname, argv, envp);
+          switch_addrspace(current->as.ptr);
           switch_boot_pcb();
           yield();
           // naive_uload(NULL, pathname);

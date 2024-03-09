@@ -31,7 +31,7 @@ void init_proc() {
   };
   context_uload(&pcb[0], user_program_path_, argv_, NULL);
 
-  char user_program_path[50] = "/bin/pal";
+  char user_program_path[50] = "/bin/nterm";
   char *argv[] = {
     user_program_path,
     NULL
@@ -46,7 +46,7 @@ void init_proc() {
 
 Context* schedule(Context *prev) {
   static int pcb_count = 0;
-  #define PCB_COUNT_MAX 600
+  #define PCB_COUNT_MAX 300
   current->cp = prev;
   if (pcb_count < PCB_COUNT_MAX) {
     pcb_index = 1;
