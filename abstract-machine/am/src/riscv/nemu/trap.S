@@ -38,27 +38,68 @@ f(30) f(31)
 #define OFFSET_EPC    ((NR_REGS + 2) * XLEN)
 #define OFFSET_NP     ((NR_REGS + 4) * XLEN)
 
+#define KERNEL 0
+#define USER 1
+
 .align 3
 .globl __am_asm_trap
+.globl g_np
+/*
+之前内核态和用户态切换会出bug的原因是因为我理所当然把mscratch寄存器和ksp之间直接挂等号
+实际上执行csrrw sp, mscratch, sp指令后，mscratch寄存器就不再是ksp了，所以cte.c里根据mscratch寄存器判断c->np是错误的
+正确解法参考了https://htchz.cc/posts/ics-pa/fb155443/
+*/
 __am_asm_trap:
   csrrw sp, mscratch, sp   # (1) atomically exchange sp and mscratch
-  bnez sp, save_context    # (2) take the branch if we trapped from user
+  // if (ksp != 0) { $sp = ksp; }
+  bnez sp, save_np_user    # (2) take the branch if we trapped from user
   csrr sp, mscratch        # (3) if we trapped from kernel, restore the original sp
-save_context:  
+
+save_np_kernel:
+  addi sp, sp, -2*XLEN     // push-----------------------
+  STORE t0, 0(sp)          // push t0
+  STORE t1, XLEN(sp)       // push t1
+
+  lui t0, KERNEL
+  la t1, g_np              // load g_np address
+  STORE t0, 0(t1)          // store np to g_np
+
+  LOAD t0, 0(sp)           // pop t0
+  LOAD t1, XLEN(sp)        // pop t1
+  addi sp, sp, 2*XLEN      // pop------------------------
+  j save_ctx
+
+save_np_user:
+  addi sp, sp, -2*XLEN     // push-----------------------
+  STORE t0, 0(sp)          // push t0
+  STORE t1, XLEN(sp)       // push t1
+
+  lui t0, USER
+  la t1, g_np              // load g_ksp address
+  STORE t0, 0(t1)          // store np to g_np
+
+  LOAD t0, 0(sp)           // pop t0
+  LOAD t1, XLEN(sp)        // pop t1
+  addi sp, sp, 2*XLEN      // pop------------------------
+
+save_ctx:  
   addi sp, sp, -CONTEXT_SIZE
 
   MAP(REGS, PUSH)
 
-  csrr t0, mscratch
-  STORE t0, OFFSET_SP(sp)
-
   csrr t0, mcause
   csrr t1, mstatus
   csrr t2, mepc
+  csrr t3, mscratch
 
   STORE t0, OFFSET_CAUSE(sp)
   STORE t1, OFFSET_STATUS(sp)
   STORE t2, OFFSET_EPC(sp)
+  STORE t3, OFFSET_SP(sp)     // c->sp = $sp;
+
+  la t0, g_np              // load g_np address
+  LOAD t0, 0(t0)           // g_np
+  STORE t0, OFFSET_NP(sp)  // c->np = np
 
   # set mstatus.MPRV to pass difftest
   li a0, (1 << 17)
@@ -76,14 +117,10 @@ save_context:
   csrw mepc, t2
 
   LOAD t1, OFFSET_NP(sp)
-  bnez t1, asm_set_ksp
+  beqz t1, restore_ctx // if (c->np == USER) { ksp = $sp; } 
+  addi t0, sp, CONTEXT_SIZE
+  csrw mscratch, t0
+restore_ctx:
   MAP(REGS, POP)
-  LOAD sp, OFFSET_SP(sp)
-  mret
-asm_set_ksp:
-  MAP(REGS, POP)
-  addi sp, sp, CONTEXT_SIZE
-  csrw mscratch, sp
-  addi sp, sp, -CONTEXT_SIZE
   LOAD sp, OFFSET_SP(sp)
   mret

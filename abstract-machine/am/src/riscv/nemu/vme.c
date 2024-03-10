@@ -29,6 +29,7 @@ bool vme_init(void* (*pgalloc_f)(int), void (*pgfree_f)(void*)) {
   pgfree_usr = pgfree_f;
 
   kas.ptr = pgalloc_f(PGSIZE);
+  // printf("kas.ptr=%x\n", kas.ptr);
 
   int i;
   for (i = 0; i < LENGTH(segments); i ++) {
@@ -136,6 +137,7 @@ Context *ucontext(AddrSpace *as, Area kstack, void *entry) {
   context->GPRSP = (uintptr_t)context;
   context->mepc = (uintptr_t)entry;
   context->pdir = as->ptr;
+  // printf("ucontext context->pdir=%x kstack_end=%x\n",context->pdir, kstack_end);
 #ifdef CONFIG_DIFFTEST
   context->mstatus = 0x1800;
 #endif

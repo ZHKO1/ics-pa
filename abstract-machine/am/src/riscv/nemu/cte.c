@@ -9,9 +9,10 @@ static inline uintptr_t get_ksp();
 
 static Context* (*user_handler)(Event, Context*) = NULL;
 
-Context* __am_irq_handle(Context *c) {
+// 针对c->np的寄放位置，参见trap.S 
+uintptr_t g_np = 0;
 
-  c->np = get_ksp() ? 1 : 0;
+Context* __am_irq_handle(Context *c) {
   set_ksp(0);
   
   if (user_handler) {
@@ -60,6 +61,7 @@ Context *kcontext(Area kstack, void (*entry)(void *), void *arg) {
   void *kstack_end = kstack.end;
   memset(kstack_start, 0, (uintptr_t)kstack_end - (uintptr_t)kstack_start);
   Context *context = (Context *)((uintptr_t)kstack_end - context_size);
+  // printf("kcontext kstack_end=%x\n", kstack_end);
   context->GPRSP = (uintptr_t)context;
   // 上下文的a1寄存器保存参数arg
   context->GPRx = (uintptr_t)arg;
