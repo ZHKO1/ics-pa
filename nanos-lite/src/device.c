@@ -20,6 +20,8 @@ static const char *keyname[256] __attribute__((used)) = {
 static int screen_w = 0, screen_h = 0;
 static int sb_size = 0;
 
+void switch_fg_pcb(int i);
+
 size_t serial_write(const void *buf, size_t offset, size_t len) {
   for (size_t i = 0; i < len; i++) putch(*((char *)buf + i));
   return len;
@@ -28,6 +30,21 @@ size_t serial_write(const void *buf, size_t offset, size_t len) {
 size_t events_read(void *buf, size_t offset, size_t len) {
   AM_INPUT_KEYBRD_T ev = io_read(AM_INPUT_KEYBRD);
   if (ev.keycode == AM_KEY_NONE) {
+    return 0;
+  };
+  if (ev.keycode == AM_KEY_F1) {
+    switch_fg_pcb(1);
+    yield();
+    return 0;
+  };
+  if (ev.keycode == AM_KEY_F2) {
+    switch_fg_pcb(2);
+    yield();
+    return 0;
+  };
+  if (ev.keycode == AM_KEY_F3) {
+    switch_fg_pcb(3);
+    yield();
     return 0;
   };
   return snprintf(buf, len, "%s %s", ev.keydown ? "kd" : "ku", keyname[ev.keycode]);

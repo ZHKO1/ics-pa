@@ -5,10 +5,15 @@
 static PCB pcb[MAX_NR_PROC] __attribute__((used)) = {};
 static PCB pcb_boot = {};
 PCB *current = NULL;
-size_t pcb_index = 0;
+PCB *fg_pcb = NULL;
+PCB *bg_pcb = NULL;
 
 void switch_boot_pcb() {
   current = &pcb_boot;
+}
+
+void switch_fg_pcb(int i) {
+  fg_pcb = &pcb[i];
 }
 
 void hello_fun(void *arg) {
@@ -24,19 +29,37 @@ void hello_fun(void *arg) {
 void init_proc() {
   // context_kload(&pcb[0], hello_fun, (void *)0x1111);
 
-  char user_program_path_[50] = "/bin/hello";
-  char *argv_[] = {
-    user_program_path_,
+  char user_program_path_0[50] = "/bin/hello";
+  char *argv_0[] = {
+    user_program_path_0,
     NULL
   };
-  context_uload(&pcb[0], user_program_path_, argv_, NULL);
+  context_uload(&pcb[0], user_program_path_0, argv_0, NULL);
 
-  char user_program_path[50] = "/bin/nterm";
-  char *argv[] = {
-    user_program_path,
+  char user_program_path_1[50] = "/bin/nterm";
+  char *argv_1[] = {
+    user_program_path_1,
     NULL
   };
-  context_uload(&pcb[1], user_program_path, argv, NULL);
+  context_uload(&pcb[1], user_program_path_1, argv_1, NULL);
+
+  char user_program_path_2[50] = "/bin/nterm";
+  char *argv_2[] = {
+    user_program_path_2,
+    NULL
+  };
+  context_uload(&pcb[2], user_program_path_2, argv_2, NULL);
+
+  char user_program_path_3[50] = "/bin/nterm";
+  char *argv_3[] = {
+    user_program_path_3,
+    NULL
+  };
+  context_uload(&pcb[3], user_program_path_3, argv_3, NULL);
+
+  bg_pcb = &pcb[0];
+  fg_pcb = &pcb[1];
+
   switch_boot_pcb();
   Log("Initializing processes...");
 
@@ -49,13 +72,12 @@ Context* schedule(Context *prev) {
   #define PCB_COUNT_MAX 300
   current->cp = prev;
   if (pcb_count < PCB_COUNT_MAX) {
-    pcb_index = 1;
+    current = fg_pcb;
     pcb_count++;
   } else if(pcb_count == PCB_COUNT_MAX){
-    pcb_index = 0;
+    current = bg_pcb;
     pcb_count = 0;
   }
-  current = &pcb[pcb_index];
   switch_addrspace(current->as.ptr);
   return current->cp;
 }
